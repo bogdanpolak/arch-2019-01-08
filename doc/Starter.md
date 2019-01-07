@@ -32,22 +32,17 @@
 	* Założenie konta GitHub-ie
 	* https://github.com/join
 
+# Zadanie
 
 > *Zadanie*
 > * Dopisanie swoich danych (imię, nazwisko, github nick)
+
+---
 
 * Zespół A
 * Zespół B
 * Zespół C
 * Zespół D
 
-
-1. [Praca z Git](#praca-z-git)
-    * Klonowanie repozytorium
-    * Używanie git-a z linii poleceń
-1. Artykuł wprowadzający `GitLearn.md` [zobacz](./GitLearn.md).
-1. Artykuł praca z gałęziami w Git `WorkingWithBranches.md` [zobacz](./WorkingWithBranches.md)
-1. Strategie scalania gałęzi - odpowiedzi ze `stackoverflow.com`
-    * [Q: What is the difference between `git merge` and `git merge --no-ff`?](https://stackoverflow.com/questions/9069061/what-is-the-difference-between-git-merge-and-git-merge-no-ff)
-
+---
 
