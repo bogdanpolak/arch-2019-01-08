@@ -32,10 +32,9 @@
 	* Założenie konta GitHub-ie
 	* https://github.com/join
 
-# Zadanie
+## Zadanie
 
-> *Zadanie*
-> * Dopisanie swoich danych (imię, nazwisko, github nick)
+> Dopisanie swoich danych (imię, nazwisko, github nick)
 
 ---
 
