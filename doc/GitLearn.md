@@ -119,7 +119,7 @@ $ git remote add xstream https://github.com/andrea-magni/MARS.git
 
 # Praca grupowa
 
-** Wariant GitHub/OpenSource - zgłaszanie `request-ów` **
+### Wariant GitHub/OpenSource - zgłaszanie PullRequest-ów
 
 Typowym schematem pracy w repozytoriach OpenSource jest zgłaszanie zmian, które wprowadzamy najpierw w swoim zdalnym repozytorium projektowym (`origin`). Portale takie GitHub analizują różnice między repozytorium autorskim (źródłowym) a jego klonem (`fork`) i gdy w naszym sklonowanym repozytorium pojawiają się nowe rewizje to możemy w prosty sposób zgłosić żądnie aktualizacji (`pull request`).
 
@@ -161,20 +161,24 @@ git push --force
 * Polecenie `git reset --hard` przenosi aktualną gałąź na pozycję `upstream/master` i modyfikuje wszystkie pliki w katalogu roboczym zmieniając je do stanu zgodnego z tą rewizją.
 * Polecenie `git push --force` wymusza aktualizację zdalnego repozytorium, w efekcie znikną (będę nie widoczne) nasze drobne korekty i zastąpi je jedna scalona zmiana.
 
-** Wariant z rozgałęzianiem **
+### Wariant z rozgałęzianiem
 
-A successful Git branching model - https://nvie.com/posts/a-successful-git-branching-model/ (Vincent Driessen, 5 stycznia 2010)
+Najczęściej stosowanym sposobem pracy z repozytorium Git jest korzystanie w wielu gałęzi. Programiści przyzywaczajeni do starszych systemów wersjonowania takich jak `CVS` lub `Subversion` obawaiją się stosowania wielu gałęzi i zarządzania nimi. W przypadku Git-a jest to podstawowy tryb pracy.
 
-How We Use Git at Microsoft - https://docs.microsoft.com/en-us/azure/devops/learn/devops-at-microsoft/use-git-microsoft
+Przez wiele lat korzystania z repozytorium Git ukształtował się ogólnie przyjęty standard używania długo-trwałych i chwilowych gałęzi. Wymienione dalej artykuły omawiają dokładniej ten teamt, ogólnie znany jako `Git Branching Model` lub `Git Branch Strategy`:
 
-Adopt a Git branching strategy by Microsoft - https://docs.microsoft.com/en-us/azure/devops/repos/git/git-branching-guidance?view=vsts
+- A successful Git branching model - https://nvie.com/posts/a-successful-git-branching-model/ (Vincent Driessen, 5 stycznia 2010)
 
-How to adopt a Git branching strategy - https://medium.freecodecamp.org/adopt-a-git-branching-strategy-ac729ff4f838 (Vali Shah - 14 paździenika 2018)
+- How We Use Git at Microsoft - https://docs.microsoft.com/en-us/azure/devops/learn/devops-at-microsoft/use-git-microsoft
 
-GitPro - 3.4 Git Branching - Branching Workflows - https://git-scm.com/book/en/v2/Git-Branching-Branching-Workflows
+- Adopt a Git branching strategy by Microsoft - https://docs.microsoft.com/en-us/azure/devops/repos/git/git-branching-guidance?view=vsts
 
-Scalanie gałęzi - odpowiedzi ze `stackoverflow.com`
-* [Q: What is the difference between `git merge` and `git merge --no-ff`?](https://stackoverflow.com/questions/9069061/what-is-the-difference-between-git-merge-and-git-merge-no-ff)
+- How to adopt a Git branching strategy - https://medium.freecodecamp.org/adopt-a-git-branching-strategy-ac729ff4f838 (Vali Shah - 14 paździenika 2018)
+
+- GitPro - 3.4 Git Branching - Branching Workflows - https://git-scm.com/book/en/v2/Git-Branching-Branching-Workflows
+
+- Scalanie gałęzi - odpowiedzi ze `stackoverflow.com` - Pytanie: What is the difference between `git merge` and `git merge --no-ff` -
+https://stackoverflow.com/questions/9069061/what-is-the-difference-between-git-merge-and-git-merge-no-ff
 
 
 
@@ -184,7 +188,7 @@ Scalanie gałęzi - odpowiedzi ze `stackoverflow.com`
 
 Git sprawdza zawartość pliku `.gitignore`, który jest wykorzystywany w momencie rejestrowania zmian. Pomijane są wszystkie pliki zapisane w `.gitignore` (zapisujemy pełną nazwę pliku lub wzorzec do którego pasuje wiele plików). Ignorować można również katalogi.
 
-**Pliki projektów**
+### Pliki projektu RAD Studio (Delphi i C++Builder)
 
 W przypadku projektów RAD Studio poza plikami binarnymi, które łatwo jest wykluczyć trudności powodują pliki projektu (`*.dproj` lub `*.cbproj`) oraz pliki grupy projektów. Są to pliki XML, które są automatycznie zapisywane przez środowisko i programista nie ma kontroli nad ich formatem i zawartością. Niestety środowisko potrafi znacznie zmodyfikować taki plik przy drobnej zmianie. Dlatego warto usuwać ten plik z systemu wersjonowania, z którego korzysta kilku programistów. Jednak nie zawsze jest to możliwe.
 
