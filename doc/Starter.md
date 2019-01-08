@@ -39,7 +39,9 @@
 ---
 
 * Zespół A
-* Zespół B
+* Zespół B: 
+    Marek Lieder, mareklieder
+    Aleksander Kupiec, olokup
 * Zespół C
 * Zespół D
 
