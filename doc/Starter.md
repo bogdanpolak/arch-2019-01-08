@@ -42,6 +42,8 @@
 * Zespół B
 * Zespół C
 * Zespół D
+* Trener
+	Bogdan Polak, bogdanpolak
 
 ---
 
