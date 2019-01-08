@@ -41,8 +41,11 @@
 * Zespół A
 	Dariusz Ruszkiewicz, Dominik Mura
 * Zespół B
-* Zespół C Grzegorz Chmielewski gchmielewski, Piotr Lewicki  PeterDelphinsky
+* Zespół C 
+	Grzegorz Chmielewski gchmielewski, Piotr Lewicki  PeterDelphinsky
 * Zespół D 
+* Trener
+	Bogdan Polak, bogdanpolak
 
 ---
 
