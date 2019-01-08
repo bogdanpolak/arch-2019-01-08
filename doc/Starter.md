@@ -39,6 +39,7 @@
 ---
 
 * Zespół A
+	Dariusz Ruszkiewicz, Dominik Mura
 * Zespół B
     Marek Lieder, mareklieder
     Aleksander Kupiec, olokup
