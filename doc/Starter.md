@@ -40,8 +40,9 @@
 
 * Zespół A
 * Zespół B
-* Zespół C
-* Zespół D
+* Zespół C 
+	Grzegorz Chmielewski gchmielewski, Piotr Lewicki  PeterDelphinsky
+* Zespół D 
 * Trener
 	Bogdan Polak, bogdanpolak
 

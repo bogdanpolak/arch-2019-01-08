@@ -1,8 +1,7 @@
 # Czysty kod wg wujka Bob-a
 
-> Czysty kod w JavaScript
-> Tłumaczenie na polski wraz z ciekawymi przykładami
-> [Zobacz tutaj](https://github.com/greg-dev/clean-code-javascript-pl)
+
+### Książka
 
 | Klucz | Treść |
 | - | - |
@@ -110,4 +109,10 @@
 * Rozdział 17. Zapachy kodu i heurystyki
     * ...
 
+
+### Artykuły
+
+- Czysty kod w JavaScript (tłumaczenie na polski wraz z ciekawymi przykładami) - https://github.com/greg-dev/clean-code-javascript-pl
+- Summary of "Clean code" by Robert C. Martin - Wojtek Łukaszuk Gist - https://gist.github.com/wojteklu/73c6914cc446146b8b533c0988cf8d29
+- How to write clean code? Lessons learnt from “The Clean Code" - Shubham Gupta, 25 lutego 2018 - https://medium.com/mindorks/how-to-write-clean-code-lessons-learnt-from-the-clean-code-robert-c-martin-9ffc7aef870c
 
