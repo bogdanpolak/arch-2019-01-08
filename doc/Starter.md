@@ -41,8 +41,8 @@
 * Zespół A
 	Dariusz Ruszkiewicz, Dominik Mura
 * Zespół B
-* Zespół C
-* Zespół D
+* Zespół C Grzegorz Chmielewski gchmielewski, Piotr Lewicki  PeterDelphinsky
+* Zespół D 
 
 ---
 
