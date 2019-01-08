@@ -39,9 +39,15 @@
 ---
 
 * Zespół A
+	Dariusz Ruszkiewicz, Dominik Mura
 * Zespół B
-* Zespół C
-* Zespół D
+    Marek Lieder, mareklieder
+    Aleksander Kupiec, olokup
+* Zespół C 
+	Grzegorz Chmielewski gchmielewski, Piotr Lewicki  PeterDelphinsky
+* Zespół D 
+* Trener
+	Bogdan Polak, bogdanpolak
 
 ---
 
