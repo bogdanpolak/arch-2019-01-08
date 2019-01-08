@@ -39,6 +39,7 @@
 ---
 
 * Zespół A
+	Dariusz Ruszkiewicz, Dominik Mura
 * Zespół B
 * Zespół C
 * Zespół D
