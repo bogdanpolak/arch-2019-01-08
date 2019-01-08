@@ -39,11 +39,14 @@
 ---
 
 * Zespół A
-* Zespół B: 
+* Zespół B
     Marek Lieder, mareklieder
     Aleksander Kupiec, olokup
-* Zespół C
-* Zespół D
+* Zespół C 
+	Grzegorz Chmielewski gchmielewski, Piotr Lewicki  PeterDelphinsky
+* Zespół D 
+* Trener
+	Bogdan Polak, bogdanpolak
 
 ---
 
