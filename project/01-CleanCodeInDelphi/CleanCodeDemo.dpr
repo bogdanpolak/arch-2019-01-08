@@ -26,7 +26,7 @@ uses
   Helper.TDataSet in 'Helper.TDataSet.pas',
   Helper.TWinControl in 'Helper.TWinControl.pas',
   Helper.TJsonObject in 'Helper.TJsonObject.pas',
-  Helper.TDBGrid in 'Helper.TDBGrid.pas';
+  Helper.TDBGrid in 'Helper.TDBGrid.pas',
   Helper.TApplication in 'Helper.TApplication.pas';
 
 {$R *.res}

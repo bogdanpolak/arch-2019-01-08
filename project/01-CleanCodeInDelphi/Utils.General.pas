@@ -8,7 +8,6 @@ uses
 
 function CheckEmail(const s: string): Boolean;
 
-{ TODO 2: [C] [Helper] TWinControl class helper }
 procedure HideAllChildFrames(AParenControl: TWinControl);
 
 implementation
