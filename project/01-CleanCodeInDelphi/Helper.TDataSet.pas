@@ -45,7 +45,6 @@ function TDataSetHelper.GetMaxValue(const fieldName: string): integer;
 var
   v: Integer;
 begin
-  { TODO 2: [C] [Helper] Extract into TDBGrid.ForEachRow class helper }
   Result := 0;
   Self.DisableControls;
   Self.First;
