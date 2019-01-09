@@ -25,7 +25,8 @@ uses
   Scripts.Readers in 'experimental\Scripts.Readers.pas',
   Helper.TDataSet in 'Helper.TDataSet.pas',
   Helper.TWinControl in 'Helper.TWinControl.pas',
-  Helper.TJsonObject in 'Helper.TJsonObject.pas';
+  Helper.TJsonObject in 'Helper.TJsonObject.pas',
+  Helper.TApplication in 'Helper.TApplication.pas';
 
 {$R *.res}
 

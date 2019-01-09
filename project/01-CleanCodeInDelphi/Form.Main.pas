@@ -57,6 +57,7 @@ uses
   System.Generics.Collections,
   // ----------------------------------------------------------------------
   Helper.TDataSet,
+  Helper.TApplication,
   // ----------------------------------------------------------------------
   Frame.Welcome,
   Consts.Application,
@@ -480,26 +481,16 @@ begin
 end;
 
 procedure TForm1.FormCreate(Sender: TObject);
-var
-  Extention: string;
-  ExeName: string;
-  ProjectFileName: string;
+
 begin
   // ----------------------------------------------------------
   // Check: If we are in developer mode
   //
   // Developer mode id used to change application configuration
   // during test
-  { TODO 2: [C] [Helper] TApplication.IsDeveloperMode }
-{$IFDEF DEBUG}
-  Extention := '.dpr';
-  ExeName := ExtractFileName(Application.ExeName);
-  ProjectFileName := ChangeFileExt(ExeName, Extention);
-  FIsDeveloperMode := FileExists(ProjectFileName) or
-    FileExists('..\..\' + ProjectFileName);
-{$ELSE}
-  FDevMod := False;
-{$ENDIF}
+
+  FIsDeveloperMode := Application.IsDevelopeMode;
+
   pnMain.Caption := '';
 end;
 
