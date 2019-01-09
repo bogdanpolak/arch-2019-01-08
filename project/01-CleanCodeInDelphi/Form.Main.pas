@@ -6,6 +6,7 @@ uses
   Winapi.Windows, System.Classes, Vcl.StdCtrls, Vcl.Controls,  Vcl.Forms,
   Vcl.ExtCtrls, Data.DB,
   ChromeTabs, ChromeTabsClasses, ChromeTabsTypes,
+  System.JSON,
   Fake.FDConnection,
   {TODO 3: [D] Resolve dependency on ExtGUI.ListBox.Books. Too tightly coupled}
   // Dependency is requred by attribute TBooksListBoxConfigurator
@@ -42,6 +43,7 @@ type
     procedure InjectBooksDBGrid(aParent: TWinControl);
     function CreateTab(const nazwa: String):TFrame;
     procedure InsertJsonBooksToDataset(jsBooks: TJSONArray; DataSet: TDataSet);
+    procedure ValidateReaders_InsertToDB(jsData: TJSONArray);
   public
     FDConnection1: TFDConnectionMock;
   end;
@@ -55,11 +57,12 @@ implementation
 
 uses
   System.StrUtils, System.Math, System.DateUtils, System.SysUtils,
-  System.RegularExpressions, Vcl.DBGrids, System.Variants,
+  System.RegularExpressions, Vcl.DBGrids, Data.DB, System.Variants,
   Vcl.Graphics,
   System.Generics.Collections,
   // ----------------------------------------------------------------------
   Helper.TDataSet,
+  Helper.TJSONObject,
   // ----------------------------------------------------------------------
   Consts.Application,
   Utils.CipherAES128,
@@ -273,22 +276,12 @@ var
   DataSrc1: TDataSource;
   DBGrid2: TDBGrid;
   DataSrc2: TDataSource;
-  i: Integer;
-  jsRow: TJSONObject;
-  email: string;
-  firstName: string;
-  lastName: string;
-  company: string;
-  bookISBN: string;
-  bookTitle: string;
-  rating: Integer;
-  oppinion: string;
-  ss: array of string;
-  v: string;
-  dtReported: TDateTime;
-  readerId: Variant;
   b: TBook;
   jsBooks: TJSONArray;
+  jsBook: TJSONObject;
+  TextBookReleseDate: string;
+  b2: TBook;
+  i: Integer;
 begin
   // ----------------------------------------------------------
   // ----------------------------------------------------------
@@ -312,89 +305,8 @@ begin
   // - Validate JSON and insert new a Readers into the Database
   //
   jsData := ImportReaderReportsFromWebService(Client_API_Token);
-  { TODO 2: [B] Extract method. Block try-catch is separate responsibility }
   try
-    for i := 0 to jsData.Count - 1 do
-    begin
-      { TODO 3: [A] Move this code into record TReaderReport.LoadFromJSON }
-      jsRow := jsData.Items[i] as TJSONObject;
-      // ----------------------------------------------------------------
-      ValidateJsonReaderReport (jsRow, dtReported);
-      // ----------------------------------------------------------------
-      { TODO 3: Extract Reader Report code into the record TReaderReport (model layer) }
-      { TODO 2: [B] Repeated code }
-      // Use TJSONObject helper Values return Variant.Null
-      // ----------------------------------------------------------------
-      //
-      // Get JSON object values into local variables
-      //
-      email := jsRow.Values['email'].Value;
-      if fieldAvaliable(jsRow, 'firstname') then
-        firstName := jsRow.Values['firstname'].Value
-      else
-        firstName := '';
-      if fieldAvaliable(jsRow, 'lastname') then
-        lastName := jsRow.Values['lastname'].Value
-      else
-        lastName := '';
-      if fieldAvaliable(jsRow, 'company') then
-        company := jsRow.Values['company'].Value
-      else
-        company := '';
-      if fieldAvaliable(jsRow, 'book-isbn') then
-        bookISBN := jsRow.Values['book-isbn'].Value
-      else
-        bookISBN := '';
-      if fieldAvaliable(jsRow, 'book-title') then
-        bookTitle := jsRow.Values['book-title'].Value
-      else
-        bookTitle := '';
-      if fieldAvaliable(jsRow, 'rating') then
-        rating := (jsRow.Values['rating'] as TJSONNumber).AsInt
-      else
-        rating := -1;
-      if fieldAvaliable(jsRow, 'oppinion') then
-        oppinion := jsRow.Values['oppinion'].Value
-      else
-        oppinion := '';
-      // ----------------------------------------------------------------
-      //
-      // Locate book by ISBN
-      //
-      { TODO 2: [B] Extract method }
-      b := FBooksConfig.GetBookList(blkAll).FindByISBN(bookISBN);
-      if not Assigned(b) then
-        raise Exception.Create('Invalid book isbn');
-      // ----------------------------------------------------------------
-      // Find the Reader in then database using an email address
-      readerId := DataModMain.FindReaderByEmil(email);
-      // ----------------------------------------------------------------
-      //
-      // Append a new reader into the database if requred:
-      if System.Variants.VarIsNull(readerId) then
-      begin
-        readerId := DataModMain.mtabReaders.GetMaxValue('ReaderId') + 1;
-        //
-        // Fields: ReaderId, FirstName, LastName, Email, Company, BooksRead,
-        // LastReport, ReadersCreated
-        //
-        DataModMain.mtabReaders.AppendRecord([readerId, firstName, lastName,
-          email, company, 1, dtReported, Now()]);
-      end;
-      // ----------------------------------------------------------------
-      //
-      // Append report into the database:
-      // Fields: ReaderId, ISBN, Rating, Oppinion, Reported
-      //
-      DataModMain.mtabReports.AppendRecord([readerId, bookISBN, rating,
-        oppinion, dtReported]);
-      // ----------------------------------------------------------------
-      if FIsDeveloperMode then
-        Insert([rating.ToString], ss, maxInt);
-    end;
-    // ----------------------------------------------------------------
-    if FIsDeveloperMode then
-      Caption := String.Join(' ,', ss);
+    ValidateReaders_InsertToDB(jsData);
   finally
     jsData.Free;
   end;
@@ -581,6 +493,84 @@ begin
       DataSet.InsertRecord([b.isbn, b.title, b.author, b.status, b.releseDate, b.pages, b.price, b.currency, b.imported, b.description]);
     end;
   end;
+procedure TForm1.ValidateReaders_InsertToDB(jsData: TJSONArray);
+var
+  i: Integer;
+  jsRow: TJSONObject;
+  dtReported: TDateTime;
+  email: string;
+  firstName: string;
+  lastName: string;
+  company: string;
+  bookISBN: string;
+  bookTitle: string;
+  rating: Integer;
+  oppinion: string;
+  ss: array of string;
+  b: TBook;
+  readerId: Variant;
+begin
+    for i := 0 to jsData.Count - 1 do
+    begin
+      { TODO 3: [A] Move this code into record TReaderReport.LoadFromJSON }
+      jsRow := jsData.Items[i] as TJSONObject;
+      // ----------------------------------------------------------------
+      ValidateJsonReaderReport (jsRow, dtReported);
+      // ----------------------------------------------------------------
+      { TODO 3: Extract Reader Report code into the record TReaderReport (model layer) }
+      // Use TJSONObject helper Values return Variant.Null
+      // ----------------------------------------------------------------
+      //
+      // Get JSON object values into local variables
+      //
+      { TODO 3: Change variables into TReaderRecord }
+      email := jsRow.GetJSONValueAsString('email');
+      firstName := jsRow.GetJSONValueAsString('firstName');
+      lastName := jsRow.GetJSONValueAsString('lastname');
+      company := jsRow.GetJSONValueAsString('company');
+      bookISBN := jsRow.GetJSONValueAsString('book-isbn');
+      bookTitle := jsRow.GetJSONValueAsString('book-title');
+      rating := jsRow.GetJSONValueAsInteger('rating');
+      oppinion := jsRow.GetJSONValueAsString('oppinion');
+
+      // ----------------------------------------------------------------
+      //
+      // Locate book by ISBN
+      //
+      { TODO 2: [B] Extract method }
+      b := FBooksConfig.GetBookList(blkAll).FindByISBN(bookISBN);
+      if not Assigned(b) then
+        raise Exception.Create('Invalid book isbn');
+      // ----------------------------------------------------------------
+      // Find the Reader in then database using an email address
+      readerId := DataModMain.FindReaderByEmil(email);
+      // ----------------------------------------------------------------
+      //
+      // Append a new reader into the database if requred:
+      if System.Variants.VarIsNull(readerId) then
+      begin
+        readerId := DataModMain.mtabReaders.GetMaxValue('ReaderId') + 1;
+        //
+        // Fields: ReaderId, FirstName, LastName, Email, Company, BooksRead,
+        // LastReport, ReadersCreated
+        //
+        DataModMain.mtabReaders.AppendRecord([readerId, firstName, lastName,
+          email, company, 1, dtReported, Now()]);
+      end;
+      // ----------------------------------------------------------------
+      //
+      // Append report into the database:
+      // Fields: ReaderId, ISBN, Rating, Oppinion, Reported
+      //
+      DataModMain.mtabReports.AppendRecord([readerId, bookISBN, rating,
+        oppinion, dtReported]);
+      // ----------------------------------------------------------------
+      if FIsDeveloperMode then
+        Insert([rating.ToString], ss, maxInt);
+    end;
+    // ----------------------------------------------------------------
+    if FIsDeveloperMode then
+      Caption := String.Join(' ,', ss);
 end;
 
 procedure TForm1.Splitter1Moved(Sender: TObject);
