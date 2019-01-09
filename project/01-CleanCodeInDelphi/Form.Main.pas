@@ -38,6 +38,7 @@ type
     FIsDeveloperMode: Boolean;
     procedure AutoHeightBookListBoxes();
     procedure InjectBooksDBGrid(aParent: TWinControl);
+
   public
     FDConnection1: TFDConnectionMock;
   end;
@@ -67,7 +68,7 @@ uses
   ClientAPI.Books;
 
 const
-  IsInjectBooksDBGridInWelcomeFrame = False;
+  IsInjectBooksDBGridInWelcomeFrame = True;
 
 const
   SQL_SelectDatabaseVersion = 'SELECT versionnr FROM DBInfo';
@@ -135,13 +136,13 @@ begin
   Result := sumHeight;
 end;
 
-{ TODO 2: [C] [Helper] Extract into TDBGrid.ForEachRow class helper }
 function AutoSizeColumns(DBGrid: TDBGrid; const MaxRows: Integer = 25): Integer;
 var
   DataSet: TDataSet;
   Bookmark: TBookmark;
   Count, i: Integer;
   ColumnsWidth: array of Integer;
+
 begin
   SetLength(ColumnsWidth, DBGrid.Columns.Count);
   for i := 0 to DBGrid.Columns.Count - 1 do
@@ -154,28 +155,44 @@ begin
     DataSet := DBGrid.DataSource.DataSet
   else
     DataSet := nil;
-  if (DataSet <> nil) and DataSet.Active then
-  begin
-    Bookmark := DataSet.GetBookmark;
-    DataSet.DisableControls;
-    try
-      Count := 0;
-      DataSet.First;
-      while not DataSet.Eof and (Count < MaxRows) do
+
+  DataSet.ForEachRow(MaxRows,
+      procedure
+      var
+        Column : TCollectionItem;
       begin
-        for i := 0 to DBGrid.Columns.Count - 1 do
-          if DBGrid.Columns[i].Visible then
-            ColumnsWidth[i] := Max(ColumnsWidth[i],
-              DBGrid.Canvas.TextWidth(DBGrid.Columns[i].Field.Text + '   '));
-        Inc(Count);
-        DataSet.Next;
-      end;
-    finally
-      DataSet.GotoBookmark(Bookmark);
-      DataSet.FreeBookmark(Bookmark);
-      DataSet.EnableControls;
-    end;
-  end;
+        for Column in DBGrid.Columns do
+          if TColumn(Column).Visible then
+            ColumnsWidth[TColumn(Column).Index] := Max(ColumnsWidth[TColumn(Column).Index],
+              DBGrid.Canvas.TextWidth(TColumn(Column).Field.Text + '   '));
+      end
+
+     ,Count);
+
+//
+//  if (DataSet <> nil) and DataSet.Active then
+//  begin
+//    Bookmark := DataSet.GetBookmark;
+//    DataSet.DisableControls;
+//    try
+//      Count := 0;
+//      DataSet.First;
+//      while not DataSet.Eof and (Count < MaxRows) do
+//      begin
+//        for i := 0 to DBGrid.Columns.Count - 1 do
+//          if DBGrid.Columns[i].Visible then
+//            ColumnsWidth[i] := Max(ColumnsWidth[i],
+//              DBGrid.Canvas.TextWidth(DBGrid.Columns[i].Field.Text + '   '));
+//        Inc(Count);
+//        DataSet.Next;
+//      end;
+//    finally
+//      DataSet.GotoBookmark(Bookmark);
+//      DataSet.FreeBookmark(Bookmark);
+//      DataSet.EnableControls;
+//    end;
+//  end;
+
   Count := 0;
   for i := 0 to DBGrid.Columns.Count - 1 do
     if DBGrid.Columns[i].Visible then
