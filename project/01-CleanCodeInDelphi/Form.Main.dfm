@@ -428,6 +428,7 @@ object Form1: TForm1
       Align = alTop
       ItemHeight = 13
       TabOrder = 0
+      ExplicitLeft = 5
     end
     object lbxBooksAvaliable2: TListBox
       AlignWithMargins = True

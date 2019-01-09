@@ -28,15 +28,14 @@ type
   TBookCollection = class(TObjectList<TBook>)
   public
     procedure LoadDataSet(BooksDAO: IBooksDAO);
-    function FindByISBN (const ISBN: string): TBook;
+    function FindByISBN(const isbn: string): TBook;
   end;
 
 type
-  { TODO 1: Incorrect prefix. Should be blk }
-  TBookListKind = (blAll, blOnShelf, blAvaliable);
+  TBookListKind = (blkAll, blkOnShelf, blkAvaliable);
 
 type
-  { TODO 3: Too many responsibilities. Separate GUI from structures  }
+  { TODO 3: Too many responsibilities. Separate GUI from structures }
   // Split into 2 classes TBooksContainer TListBoxesForBooks
   // Add new unit: Model.Books.pas
   TBooksListBoxConfigurator = class(TComponent)
@@ -58,9 +57,9 @@ type
     destructor Destroy; override;
     { TODO 3: Introduce 3 properties: ListBoxOnShelf, ListBoxAvaliable, Books }
     procedure PrepareListBoxes(lbxOnShelf, lbxAvaliable: TListBox);
-    function GetBookList (kind: TBookListKind): TBookCollection; 
-    function FindBook (isbn: string): TBook;
-    procedure InsertNewBook (b:TBook);
+    function GetBookList(kind: TBookListKind): TBookCollection;
+    function FindBook(isbn: string): TBook;
+    procedure InsertNewBook(b: TBook);
   end;
 
 implementation
@@ -68,10 +67,6 @@ implementation
 uses
   DataAccess.Books.FireDAC,
   Data.Main;
-
-const
-  { TODO 1 : [0] Remove const Books_API_Token }
-  Books_API_Token = 'BOOKS-arg58d8jmefcu5-1fceb';
 
 constructor TBooksListBoxConfigurator.Create(AOwner: TComponent);
 var
@@ -104,31 +99,34 @@ begin
   inherited;
 end;
 
-function TBooksListBoxConfigurator.GetBookList (kind: TBookListKind):
-  TBookCollection;
+function TBooksListBoxConfigurator.GetBookList(kind: TBookListKind)
+  : TBookCollection;
 begin
   case kind of
-    blAll: Result := FAllBooks;
-    blOnShelf: Result := FBooksOnShelf;
-    blAvaliable: Result := FBooksAvaliable
-    else Result := FAllBooks;
+    blkAll:
+      Result := FAllBooks;
+    blkOnShelf:
+      Result := FBooksOnShelf;
+    blkAvaliable:
+      Result := FBooksAvaliable
+  else
+    Result := FAllBooks;
   end;
 end;
 
 procedure TBooksListBoxConfigurator.InsertNewBook(b: TBook);
 begin
   FAllBooks.Add(b);
-  { TODO 2: [A] Code duplication, look on the TBooksListBoxConfigurator.Create }
   if b.status = 'on-shelf' then
     FBooksOnShelf.Add(b)
   else if b.status = 'avaliable' then
     FBooksAvaliable.Add(b);
-  FListBoxAvaliable.AddItem(b.title,b);
+  FListBoxAvaliable.AddItem(b.title, b);
 end;
 
-function TBooksListBoxConfigurator.FindBook (isbn: string): TBook;
+function TBooksListBoxConfigurator.FindBook(isbn: string): TBook;
 begin
-  Result := FAllBooks.FindByISBN (isbn);
+  Result := FAllBooks.FindByISBN(isbn);
 end;
 
 procedure TBooksListBoxConfigurator.PrepareListBoxes(lbxOnShelf,
@@ -279,17 +277,14 @@ begin
     end);
 end;
 
-function TBookCollection.FindByISBN (const ISBN: string): TBook;
+function TBookCollection.FindByISBN(const isbn: string): TBook;
 var
-  i: Integer;
+  book: TBook;
 begin
-  { TODO 1: Dijkstra structural programming rule violation }
-  { TODO 1: More readable code for b in Items do. Shorter method }
-  // Dijkstra: one entrance and one exit
-  for i := 0 to Self.Count-1 do
-    if Self.Items[i].isbn = ISBN then
+  for book in self do
+    if book.isbn = isbn then
     begin
-      Result := Self.Items[i];
+      Result := book;
       exit;
     end;
   Result := nil;
