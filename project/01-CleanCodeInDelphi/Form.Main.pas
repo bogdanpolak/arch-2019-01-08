@@ -41,8 +41,6 @@ type
     procedure AutoHeightBookListBoxes();
     procedure InjectBooksDBGrid(aParent: TWinControl);
     function CreateTab(nazwa: String):TFrame;
-    //procedure CreateTabImport(var frm: TFrameImport);
-    //procedure CreateTabWelcome(var frm: TFrameWelcome);
     procedure JsBookTryBlock(jsBooks: TJSONArray; var b: TBook);
   public
     FDConnection1: TFDConnectionMock;
@@ -305,7 +303,6 @@ begin
     jsBooks.Free;
   end;
   frm:= CreateTab('Readers') as TFrameImport;
-  //CreateTabImport(frm);
 
   // ----------------------------------------------------------
   // ----------------------------------------------------------
@@ -546,53 +543,6 @@ begin
  Result:=frm;
 end;
 
-{
-procedure TForm1.CreateTabImport(var frm: TFrameImport);
-var
-  tab: TChromeTab;
-begin
-  // ----------------------------------------------------------
-  // ----------------------------------------------------------
-  //
-  // Create new frame, show it add to ChromeTabs
-  // 1. Create TFrameImport.
-  // 2. Embed frame in pnMain (show)
-  // 3. Add new ChromeTab
-  //
-  { DONE 2: [A] Extract method. Read comments and use meaningful }
-  // Look for ChromeTabs1.Tabs.Add for code duplication
-{
-  frm := TFrameImport.Create(pnMain);
-  frm.Parent := pnMain;
-  frm.Visible := True;
-  frm.Align := alClient;
-  tab := ChromeTabs1.Tabs.Add;
-  tab.Caption := 'Readers';
-  tab.Data := frm;
-end;
-}
-
-{
-procedure TForm1.CreateTabWelcome(var frm: TFrameWelcome);
-var
-  tab: TChromeTab;
-begin
-  // ----------------------------------------------------------
-  // ----------------------------------------------------------
-  //
-  // Create and show Welcome Frame
-  //
-  { DONE 2: [A] Extract method. Read comments and use meaningful }
-{  frm := TFrameWelcome.Create(pnMain);
-  frm.Parent := pnMain;
-  frm.Visible := True;
-  frm.Align := alClient;
-  tab := ChromeTabs1.Tabs.Add;
-  tab.Caption := 'Welcome';
-  tab.Data := frm;
-end;
-}
-
 procedure TForm1.JsBookTryBlock(jsBooks: TJSONArray; var b: TBook);
 var
   jsBook: TJSONObject;
@@ -645,7 +595,7 @@ begin
   tmrAppReady.Enabled := False;
   if FIsDeveloperMode then
     ReportMemoryLeaksOnShutdown := True;
-  //CreateTabWelcome(frm);
+
   frm:= CreateTab('Welcome') as TFrameWelcome;
   // ----------------------------------------------------------
   // ----------------------------------------------------------
