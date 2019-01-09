@@ -53,6 +53,7 @@ uses
   System.StrUtils, System.Math, System.DateUtils, System.SysUtils,
   System.RegularExpressions, Vcl.DBGrids, Data.DB, System.Variants,
   Vcl.Graphics, System.JSON,
+  System.Generics.Collections,
   Frame.Welcome,
   Consts.Application,
   Utils.CipherAES128,
