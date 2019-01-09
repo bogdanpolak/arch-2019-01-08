@@ -39,8 +39,6 @@ type
     FIsDeveloperMode: Boolean;
     procedure AutoHeightBookListBoxes();
     procedure InjectBooksDBGrid(aParent: TWinControl);
-    function GetJSONValueAsString(jsRow: TJSONObject; FieldName: string): String;
-    function GetJSONValueAsInteger(jsRow: TJSONObject; FieldName: string): integer;
     procedure ValidateReaders_InsertToDB(jsData: TJSONArray);
   public
     FDConnection1: TFDConnectionMock;
@@ -60,6 +58,7 @@ uses
   System.Generics.Collections,
   // ----------------------------------------------------------------------
   Helper.TDataSet,
+  Helper.TJSONObject,
   // ----------------------------------------------------------------------
   Frame.Welcome,
   Consts.Application,
@@ -477,22 +476,6 @@ begin
   end;
 end;
 
-function TForm1.GetJSONValueAsInteger(jsRow: TJSONObject; FieldName: string): integer;
-begin
-  if fieldAvaliable(jsRow, FieldName) then
-    Result := (jsRow.Values[FieldName] as TJSONNumber).AsInt
-  else
-    Result := -1;
-end;
-
-function TForm1.GetJSONValueAsString(jsRow: TJSONObject; FieldName: string): String;
-begin
-  if fieldAvaliable(jsRow, FieldName) then
-    Result := jsRow.Values[FieldName].Value
-  else
-    Result := '';
-end;
-
 procedure TForm1.ValidateReaders_InsertToDB(jsData: TJSONArray);
 var
   i: Integer;
@@ -524,14 +507,14 @@ begin
       // Get JSON object values into local variables
       //
       { TODO 3: Change variables into TReaderRecord }
-      email := GetJSONValueAsString(jsRow, 'email');
-      firstName := GetJSONValueAsString(jsRow, 'firstName');
-      lastName := GetJSONValueAsString(jsRow, 'lastname');
-      company := GetJSONValueAsString(jsRow, 'company');
-      bookISBN := GetJSONValueAsString(jsRow, 'book-isbn');
-      bookTitle := GetJSONValueAsString(jsRow, 'book-title');
-      rating := GetJSONValueAsInteger(jsRow, 'rating');
-      oppinion := GetJSONValueAsString(jsRow, 'oppinion');
+      email := jsRow.GetJSONValueAsString('email');
+      firstName := jsRow.GetJSONValueAsString('firstName');
+      lastName := jsRow.GetJSONValueAsString('lastname');
+      company := jsRow.GetJSONValueAsString('company');
+      bookISBN := jsRow.GetJSONValueAsString('book-isbn');
+      bookTitle := jsRow.GetJSONValueAsString('book-title');
+      rating := jsRow.GetJSONValueAsInteger('rating');
+      oppinion := jsRow.GetJSONValueAsString('oppinion');
 
       // ----------------------------------------------------------------
       //
