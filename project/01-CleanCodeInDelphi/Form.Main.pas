@@ -3,16 +3,14 @@
 interface
 
 uses
-  Winapi.Windows, System.Classes, Vcl.StdCtrls, Vcl.Controls,  Vcl.Forms,
+  Winapi.Windows, System.Classes, Vcl.StdCtrls, Vcl.Controls, Vcl.Forms,
   Vcl.ExtCtrls, Data.DB,
   ChromeTabs, ChromeTabsClasses, ChromeTabsTypes,
   System.JSON,
   Fake.FDConnection,
   {TODO 3: [D] Resolve dependency on ExtGUI.ListBox.Books. Too tightly coupled}
   // Dependency is requred by attribute TBooksListBoxConfigurator
-  ExtGUI.ListBox.Books,
-  System.JSON;
-
+  ExtGUI.ListBox.Books;
 
 type
   TForm1 = class(TForm)
@@ -41,7 +39,7 @@ type
     FIsDeveloperMode: Boolean;
     procedure AutoHeightBookListBoxes();
     procedure InjectBooksDBGrid(aParent: TWinControl);
-    function CreateTab(const nazwa: String):TFrame;
+    function CreateTab(const nazwa: String): TFrame;
     procedure InsertJsonBooksToDataset(jsBooks: TJSONArray; DataSet: TDataSet);
     procedure ValidateReaders_InsertToDB(jsData: TJSONArray);
   public
@@ -57,12 +55,12 @@ implementation
 
 uses
   System.StrUtils, System.Math, System.DateUtils, System.SysUtils,
-  System.RegularExpressions, Vcl.DBGrids, Data.DB, System.Variants,
-  Vcl.Graphics,
+  System.RegularExpressions, Vcl.DBGrids, System.Variants, Vcl.Graphics,
   System.Generics.Collections,
   // ----------------------------------------------------------------------
   Helper.TDataSet,
   Helper.TJSONObject,
+  Helper.TWinControl,
   Helper.TApplication,
   // ----------------------------------------------------------------------
   Consts.Application,
@@ -73,8 +71,6 @@ uses
   ClientAPI.Books,
   Frame.Import,
   Frame.Welcome;
-  Helper.TWinControl, 
-  Helper.TJsonObject;
 
 const
   IsInjectBooksDBGridInWelcomeFrame = True;
@@ -130,41 +126,42 @@ begin
     DataSet := nil;
 
   DataSet.ForEachRow(MaxRows,
-      procedure
-      var
-        Column : TCollectionItem;
-      begin
-        for Column in DBGrid.Columns do
-          if TColumn(Column).Visible then
-            ColumnsWidth[TColumn(Column).Index] := Max(ColumnsWidth[TColumn(Column).Index],
-              DBGrid.Canvas.TextWidth(TColumn(Column).Field.Text + '   '));
-      end
+    procedure
+    var
+      Column: TCollectionItem;
+    begin
+      for Column in DBGrid.Columns do
+        if TColumn(Column).Visible then
+          ColumnsWidth[TColumn(Column).Index] :=
+            Max(ColumnsWidth[TColumn(Column).Index],
+            DBGrid.Canvas.TextWidth(TColumn(Column).Field.Text + '   '));
+    end
 
-     ,Count);
+    , Count);
 
-//
-//  if (DataSet <> nil) and DataSet.Active then
-//  begin
-//    Bookmark := DataSet.GetBookmark;
-//    DataSet.DisableControls;
-//    try
-//      Count := 0;
-//      DataSet.First;
-//      while not DataSet.Eof and (Count < MaxRows) do
-//      begin
-//        for i := 0 to DBGrid.Columns.Count - 1 do
-//          if DBGrid.Columns[i].Visible then
-//            ColumnsWidth[i] := Max(ColumnsWidth[i],
-//              DBGrid.Canvas.TextWidth(DBGrid.Columns[i].Field.Text + '   '));
-//        Inc(Count);
-//        DataSet.Next;
-//      end;
-//    finally
-//      DataSet.GotoBookmark(Bookmark);
-//      DataSet.FreeBookmark(Bookmark);
-//      DataSet.EnableControls;
-//    end;
-//  end;
+  //
+  // if (DataSet <> nil) and DataSet.Active then
+  // begin
+  // Bookmark := DataSet.GetBookmark;
+  // DataSet.DisableControls;
+  // try
+  // Count := 0;
+  // DataSet.First;
+  // while not DataSet.Eof and (Count < MaxRows) do
+  // begin
+  // for i := 0 to DBGrid.Columns.Count - 1 do
+  // if DBGrid.Columns[i].Visible then
+  // ColumnsWidth[i] := Max(ColumnsWidth[i],
+  // DBGrid.Canvas.TextWidth(DBGrid.Columns[i].Field.Text + '   '));
+  // Inc(Count);
+  // DataSet.Next;
+  // end;
+  // finally
+  // DataSet.GotoBookmark(Bookmark);
+  // DataSet.FreeBookmark(Bookmark);
+  // DataSet.EnableControls;
+  // end;
+  // end;
 
   Count := 0;
   for i := 0 to DBGrid.Columns.Count - 1 do
@@ -204,22 +201,20 @@ begin
   Result := EncodeDate(yy, mm, 1);
 end;
 
-
-procedure ValidateJsonReaderReport(jsRow: TJSONObject;  var dtReported: TDateTime);
+// TODO 2: Przedyskutować pojedynczą odpowiedzialność (SRP)
+procedure ValidateJsonReaderReport(jsRow: TJSONObject;
+var dtReported: TDateTime);
 var
   email: string;
 begin
   email := jsRow.Values['email'].Value;
-
   if not CheckEmail(email) then
     raise Exception.Create('Invalid email addres');
-
   if not jsRow.IsValidIsoDateUtc('created') then
-    dtReported := jsRow.GetIsoDateUtcFromValidatedValue('created')
+    raise Exception.Create('Invalid date. Expected ISO format')
   else
-    raise Exception.Create('Invalid date. Expected ISO format');
+    dtReported := jsRow.GetIsoDateUtcFromValidatedValue('created');
 end;
-
 
 { TODO 2: Method is too large. Comments is showing separate methods }
 procedure TForm1.btnImportClick(Sender: TObject);
@@ -230,12 +225,7 @@ var
   DataSrc1: TDataSource;
   DBGrid2: TDBGrid;
   DataSrc2: TDataSource;
-  b: TBook;
   jsBooks: TJSONArray;
-  jsBook: TJSONObject;
-  TextBookReleseDate: string;
-  b2: TBook;
-  i: Integer;
 begin
   // ----------------------------------------------------------
   // ----------------------------------------------------------
@@ -245,11 +235,11 @@ begin
   { DONE 2: [A] Extract method. Read comments and use meaningful name }
   jsBooks := ImportBooksFromWebService(Client_API_Token);
   try
-   InsertJsonBooksToDataset(jsBooks, DataModMain.mtabBooks);
+    InsertJsonBooksToDataset(jsBooks, DataModMain.mtabBooks);
   finally
     jsBooks.Free;
   end;
-  frm:= CreateTab('Readers') as TFrameImport;
+  frm := CreateTab('Readers') as TFrameImport;
 
   // ----------------------------------------------------------
   // ----------------------------------------------------------
@@ -300,7 +290,7 @@ begin
 end;
 
 procedure TForm1.ChromeTabs1ButtonCloseTabClick(Sender: TObject;
-  ATab: TChromeTab; var Close: Boolean);
+ATab: TChromeTab; var Close: Boolean);
 var
   obj: TObject;
 begin
@@ -309,7 +299,7 @@ begin
 end;
 
 procedure TForm1.ChromeTabs1Change(Sender: TObject; ATab: TChromeTab;
-  TabChangeType: TTabChangeType);
+TabChangeType: TTabChangeType);
 var
   obj: TObject;
 begin
@@ -381,29 +371,28 @@ begin
   end;
 end;
 
-
-function TForm1.CreateTab(const nazwa: String):TFrame;
+function TForm1.CreateTab(const nazwa: String): TFrame;
 var
- frm: TFrame;
- tab: TChromeTab;
+  frm: TFrame;
+  tab: TChromeTab;
 begin
- frm:= TFrameImport.Create(pnMain);;
- if nazwa ='Readers' then
-  frm := TFrameImport.Create(pnMain)
- else if nazwa ='Welcome' then
-  frm := TFrameWelcome.Create(pnMain);
+  if nazwa = 'Readers' then
+    frm := TFrameImport.Create(pnMain)
+  else
+    frm := TFrameWelcome.Create(pnMain);
 
- frm.Parent := pnMain;
- frm.Visible := True;
- frm.Align := alClient;
- tab := ChromeTabs1.Tabs.Add;
- tab.Caption := nazwa;
- tab.Data := frm;
+  frm.Parent := pnMain;
+  frm.Visible := True;
+  frm.Align := alClient;
+  tab := ChromeTabs1.Tabs.Add;
+  tab.Caption := nazwa;
+  tab.Data := frm;
 
- Result:=frm;
+  Result := frm;
 end;
 
-procedure TForm1.InsertJsonBooksToDataset(jsBooks: TJSONArray; DataSet: TDataSet);
+procedure TForm1.InsertJsonBooksToDataset(jsBooks: TJSONArray;
+DataSet: TDataSet);
 var
   jsBook: TJSONObject;
   TextBookReleseDate: string;
@@ -434,9 +423,12 @@ begin
       // Append report into the database:
       // Fields: ISBN, Title, Authors, Status, ReleseDate, Pages, Price,
       // Currency, Imported, Description
-      DataSet.InsertRecord([b.isbn, b.title, b.author, b.status, b.releseDate, b.pages, b.price, b.currency, b.imported, b.description]);
+      DataSet.InsertRecord([b.isbn, b.title, b.author, b.status, b.releseDate,
+        b.pages, b.price, b.currency, b.imported, b.description]);
     end;
   end;
+end;
+
 procedure TForm1.ValidateReaders_InsertToDB(jsData: TJSONArray);
 var
   i: Integer;
@@ -454,67 +446,67 @@ var
   b: TBook;
   readerId: Variant;
 begin
-    for i := 0 to jsData.Count - 1 do
-    begin
-      { TODO 3: [A] Move this code into record TReaderReport.LoadFromJSON }
-      jsRow := jsData.Items[i] as TJSONObject;
-      // ----------------------------------------------------------------
-      ValidateJsonReaderReport (jsRow, dtReported);
-      // ----------------------------------------------------------------
-      { TODO 3: Extract Reader Report code into the record TReaderReport (model layer) }
-      // Use TJSONObject helper Values return Variant.Null
-      // ----------------------------------------------------------------
-      //
-      // Get JSON object values into local variables
-      //
-      { TODO 3: Change variables into TReaderRecord }
-      email := jsRow.GetJSONValueAsString('email');
-      firstName := jsRow.GetJSONValueAsString('firstName');
-      lastName := jsRow.GetJSONValueAsString('lastname');
-      company := jsRow.GetJSONValueAsString('company');
-      bookISBN := jsRow.GetJSONValueAsString('book-isbn');
-      bookTitle := jsRow.GetJSONValueAsString('book-title');
-      rating := jsRow.GetJSONValueAsInteger('rating');
-      oppinion := jsRow.GetJSONValueAsString('oppinion');
+  for i := 0 to jsData.Count - 1 do
+  begin
+    { TODO 3: [A] Move this code into record TReaderReport.LoadFromJSON }
+    jsRow := jsData.Items[i] as TJSONObject;
+    // ----------------------------------------------------------------
+    ValidateJsonReaderReport(jsRow, dtReported);
+    // ----------------------------------------------------------------
+    { TODO 3: Extract Reader Report code into the record TReaderReport (model layer) }
+    // Use TJSONObject helper Values return Variant.Null
+    // ----------------------------------------------------------------
+    //
+    // Get JSON object values into local variables
+    //
+    { TODO 3: Change variables into TReaderRecord }
+    email := jsRow.GetJSONValueAsString('email');
+    firstName := jsRow.GetJSONValueAsString('firstName');
+    lastName := jsRow.GetJSONValueAsString('lastname');
+    company := jsRow.GetJSONValueAsString('company');
+    bookISBN := jsRow.GetJSONValueAsString('book-isbn');
+    bookTitle := jsRow.GetJSONValueAsString('book-title');
+    rating := jsRow.GetJSONValueAsInteger('rating');
+    oppinion := jsRow.GetJSONValueAsString('oppinion');
 
-      // ----------------------------------------------------------------
+    // ----------------------------------------------------------------
+    //
+    // Locate book by ISBN
+    //
+    { TODO 2: [B] Extract method }
+    b := FBooksConfig.GetBookList(blkAll).FindByISBN(bookISBN);
+    if not Assigned(b) then
+      raise Exception.Create('Invalid book isbn');
+    // ----------------------------------------------------------------
+    // Find the Reader in then database using an email address
+    readerId := DataModMain.FindReaderByEmil(email);
+    // ----------------------------------------------------------------
+    //
+    // Append a new reader into the database if requred:
+    if System.Variants.VarIsNull(readerId) then
+    begin
+      readerId := DataModMain.mtabReaders.GetMaxValue('ReaderId') + 1;
       //
-      // Locate book by ISBN
+      // Fields: ReaderId, FirstName, LastName, Email, Company, BooksRead,
+      // LastReport, ReadersCreated
       //
-      { TODO 2: [B] Extract method }
-      b := FBooksConfig.GetBookList(blkAll).FindByISBN(bookISBN);
-      if not Assigned(b) then
-        raise Exception.Create('Invalid book isbn');
-      // ----------------------------------------------------------------
-      // Find the Reader in then database using an email address
-      readerId := DataModMain.FindReaderByEmil(email);
-      // ----------------------------------------------------------------
-      //
-      // Append a new reader into the database if requred:
-      if System.Variants.VarIsNull(readerId) then
-      begin
-        readerId := DataModMain.mtabReaders.GetMaxValue('ReaderId') + 1;
-        //
-        // Fields: ReaderId, FirstName, LastName, Email, Company, BooksRead,
-        // LastReport, ReadersCreated
-        //
-        DataModMain.mtabReaders.AppendRecord([readerId, firstName, lastName,
-          email, company, 1, dtReported, Now()]);
-      end;
-      // ----------------------------------------------------------------
-      //
-      // Append report into the database:
-      // Fields: ReaderId, ISBN, Rating, Oppinion, Reported
-      //
-      DataModMain.mtabReports.AppendRecord([readerId, bookISBN, rating,
-        oppinion, dtReported]);
-      // ----------------------------------------------------------------
-      if FIsDeveloperMode then
-        Insert([rating.ToString], ss, maxInt);
+      DataModMain.mtabReaders.AppendRecord([readerId, firstName, lastName,
+        email, company, 1, dtReported, Now()]);
     end;
     // ----------------------------------------------------------------
+    //
+    // Append report into the database:
+    // Fields: ReaderId, ISBN, Rating, Oppinion, Reported
+    //
+    DataModMain.mtabReports.AppendRecord([readerId, bookISBN, rating, oppinion,
+      dtReported]);
+    // ----------------------------------------------------------------
     if FIsDeveloperMode then
-      Caption := String.Join(' ,', ss);
+      Insert([rating.ToString], ss, maxInt);
+  end;
+  // ----------------------------------------------------------------
+  if FIsDeveloperMode then
+    Caption := String.Join(' ,', ss);
 end;
 
 procedure TForm1.Splitter1Moved(Sender: TObject);
@@ -535,7 +527,7 @@ begin
   if FIsDeveloperMode then
     ReportMemoryLeaksOnShutdown := True;
 
-  frm:= CreateTab('Welcome') as TFrameWelcome;
+  frm := CreateTab('Welcome') as TFrameWelcome;
   // ----------------------------------------------------------
   // ----------------------------------------------------------
   //
