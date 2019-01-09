@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, System.Classes, Vcl.StdCtrls, Vcl.Controls,  Vcl.Forms,
-  Vcl.ExtCtrls,
+  Vcl.ExtCtrls, Data.DB,
   ChromeTabs, ChromeTabsClasses, ChromeTabsTypes,
   Fake.FDConnection,
   {TODO 3: [D] Resolve dependency on ExtGUI.ListBox.Books. Too tightly coupled}
@@ -41,7 +41,7 @@ type
     procedure AutoHeightBookListBoxes();
     procedure InjectBooksDBGrid(aParent: TWinControl);
     function CreateTab(nazwa: String):TFrame;
-    procedure InsertJsonBooksToDataset(jsBooks: TJSONArray);
+    procedure InsertJsonBooksToDataset(jsBooks: TJSONArray; DataSet: TDataSet);
   public
     FDConnection1: TFDConnectionMock;
   end;
@@ -55,7 +55,7 @@ implementation
 
 uses
   System.StrUtils, System.Math, System.DateUtils, System.SysUtils,
-  System.RegularExpressions, Vcl.DBGrids, Data.DB, System.Variants,
+  System.RegularExpressions, Vcl.DBGrids, System.Variants,
   Vcl.Graphics,
   System.Generics.Collections,
   // ----------------------------------------------------------------------
@@ -298,7 +298,7 @@ begin
   { DONE 2: [A] Extract method. Read comments and use meaningful name }
   jsBooks := ImportBooksFromWebService(Client_API_Token);
   try
-   InsertJsonBooksToDataset(jsBooks);
+   InsertJsonBooksToDataset(jsBooks, DataModMain.mtabBooks);
   finally
     jsBooks.Free;
   end;
@@ -543,7 +543,7 @@ begin
  Result:=frm;
 end;
 
-procedure TForm1.InsertJsonBooksToDataset(jsBooks: TJSONArray);
+procedure TForm1.InsertJsonBooksToDataset(jsBooks: TJSONArray; DataSet: TDataSet);
 var
   jsBook: TJSONObject;
   TextBookReleseDate: string;
@@ -574,7 +574,7 @@ begin
       // Append report into the database:
       // Fields: ISBN, Title, Authors, Status, ReleseDate, Pages, Price,
       // Currency, Imported, Description
-      DataModMain.mtabBooks.InsertRecord([b.isbn, b.title, b.author, b.status, b.releseDate, b.pages, b.price, b.currency, b.imported, b.description]);
+      DataSet.InsertRecord([b.isbn, b.title, b.author, b.status, b.releseDate, b.pages, b.price, b.currency, b.imported, b.description]);
     end;
   end;
 end;
