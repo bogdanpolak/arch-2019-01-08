@@ -54,6 +54,9 @@ uses
   System.RegularExpressions, Vcl.DBGrids, Data.DB, System.Variants,
   Vcl.Graphics, System.JSON,
   System.Generics.Collections,
+  // ----------------------------------------------------------------------
+  Helper.TDataSet,
+  // ----------------------------------------------------------------------
   Frame.Welcome,
   Consts.Application,
   Utils.CipherAES128,
@@ -97,7 +100,7 @@ begin
   AutoHeightBookListBoxes();
 end;
 
-{ TODO 2: [Helper] TWinControl class helper }
+{ TODO 2: [C] [Helper] TWinControl class helper }
 function SumHeightForChildrens(Parent: TWinControl;
   ControlsToExclude: TArray<TControl>): Integer;
 var
@@ -128,7 +131,7 @@ begin
   Result := sumHeight;
 end;
 
-{ TODO 2: [Helper] Extract into TDBGrid.ForEachRow class helper }
+{ TODO 2: [C] [Helper] Extract into TDBGrid.ForEachRow class helper }
 function AutoSizeColumns(DBGrid: TDBGrid; const MaxRows: Integer = 25): Integer;
 var
   DataSet: TDataSet;
@@ -183,7 +186,7 @@ end;
 //
 // Function checks is TJsonObject has field and this field has not null value
 //
-{ TODO 2: [Helper] TJSONObject Class helpper and more minigful name expected }
+{ TODO 2: [C] [Helper] TJSONObject Class helpper and more minigful name expected }
 function fieldAvaliable(jsObject: TJSONObject; const fieldName: string)
   : Boolean; inline;
 begin
@@ -191,7 +194,7 @@ begin
     [fieldName].Null;
 end;
 
-{ TODO 2: [Helper] TJSONObject Class helpper and this method has two responsibilities }
+{ TODO 2: [C] [Helper] TJSONObject Class helpper and this method has two responsibilities }
 // Warning! In-out var parameter
 // extract separate:  GetIsoDateUtc
 function IsValidIsoDateUtc(jsObj: TJSONObject; const Field: string;
@@ -257,7 +260,7 @@ begin
 end;
 
 
-{ TODO 2: [A] Method is too large. Comments is showing separate methods }
+{ TODO 2: Method is too large. Comments is showing separate methods }
 procedure TForm1.btnImportClick(Sender: TObject);
 var
   frm: TFrameImport;
@@ -334,7 +337,7 @@ begin
   // 2. Embed frame in pnMain (show)
   // 3. Add new ChromeTab
   //
-  { TODO 2: [B] Extract method. Read comments and use meaningful }
+  { TODO 2: [A] Extract method. Read comments and use meaningful }
   // Look for ChromeTabs1.Tabs.Add for code duplication
   frm := TFrameImport.Create(pnMain);
   frm.Parent := pnMain;
@@ -346,27 +349,12 @@ begin
   // ----------------------------------------------------------
   // ----------------------------------------------------------
   //
-  // Dynamically Add TDBGrid to TFrameImport
-  //
-  { TODO 2: [C] Move code down separate bussines logic from GUI }
-  // warning for dataset dependencies, discuss TDBGrid dependencies
-  DataSrc1 := TDataSource.Create(frm);
-  DBGrid1 := TDBGrid.Create(frm);
-  DBGrid1.AlignWithMargins := True;
-  DBGrid1.Parent := frm;
-  DBGrid1.Align := alClient;
-  DBGrid1.DataSource := DataSrc1;
-  DataSrc1.DataSet := DataModMain.mtabReaders;
-  AutoSizeColumns(DBGrid1);
-  // ----------------------------------------------------------
-  // ----------------------------------------------------------
-  //
   // Import new Reader Reports data from OpenAPI
   // - Load JSON from WebService
   // - Validate JSON and insert new a Readers into the Database
   //
   jsData := ImportReaderReportsFromWebService(Client_API_Token);
-  { TODO 2: [D] Extract method. Block try-catch is separate responsibility }
+  { TODO 2: [B] Extract method. Block try-catch is separate responsibility }
   try
     for i := 0 to jsData.Count - 1 do
     begin
@@ -375,8 +363,8 @@ begin
       // ----------------------------------------------------------------
       ValidateJsonReaderReport (jsRow, dtReported);
       // ----------------------------------------------------------------
-      { TODO 3: [A] Extract Reader Report code into the record TReaderReport (model layer) }
-      { TODO 2: [F] Repeated code. Violation of the DRY rule }
+      { TODO 3: Extract Reader Report code into the record TReaderReport (model layer) }
+      { TODO 2: [B] Repeated code }
       // Use TJSONObject helper Values return Variant.Null
       // ----------------------------------------------------------------
       //
@@ -415,7 +403,7 @@ begin
       //
       // Locate book by ISBN
       //
-      { TODO 2: [G] Extract method }
+      { TODO 2: [B] Extract method }
       b := FBooksConfig.GetBookList(blkAll).FindByISBN(bookISBN);
       if not Assigned(b) then
         raise Exception.Create('Invalid book isbn');
@@ -427,9 +415,7 @@ begin
       // Append a new reader into the database if requred:
       if System.Variants.VarIsNull(readerId) then
       begin
-        { TODO 2: [G] Extract method }
-        readerId := DataModMain.GetMaxValueInDataSet(DataModMain.mtabReaders,
-          'ReaderId') + 1;
+        readerId := DataModMain.mtabReaders.GetMaxValue('ReaderId') + 1;
         //
         // Fields: ReaderId, FirstName, LastName, Email, Company, BooksRead,
         // LastReport, ReadersCreated
@@ -451,27 +437,42 @@ begin
     // ----------------------------------------------------------------
     if FIsDeveloperMode then
       Caption := String.Join(' ,', ss);
-    // ----------------------------------------------------------------
-    with TSplitter.Create(frm) do
-    begin
-      Align := alBottom;
-      Parent := frm;
-      Height := 5;
-    end;
-    DBGrid1.Margins.Bottom := 0;
-    DataSrc2 := TDataSource.Create(frm);
-    DBGrid2 := TDBGrid.Create(frm);
-    DBGrid2.AlignWithMargins := True;
-    DBGrid2.Parent := frm;
-    DBGrid2.Align := alBottom;
-    DBGrid2.Height := frm.Height div 3;
-    DBGrid2.DataSource := DataSrc2;
-    DataSrc2.DataSet := DataModMain.mtabReports;
-    DBGrid2.Margins.Top := 0;
-    AutoSizeColumns(DBGrid2);
   finally
     jsData.Free;
   end;
+  // ----------------------------------------------------------
+  // ----------------------------------------------------------
+  //
+  // Dynamically Add TDBGrid to TFrameImport
+  //
+  { TODO 2: discuss TDBGrid dependencies }
+  DataSrc1 := TDataSource.Create(frm);
+  DBGrid1 := TDBGrid.Create(frm);
+  DBGrid1.AlignWithMargins := True;
+  DBGrid1.Parent := frm;
+  DBGrid1.Align := alClient;
+  DBGrid1.DataSource := DataSrc1;
+  DataSrc1.DataSet := DataModMain.mtabReaders;
+  AutoSizeColumns(DBGrid1);
+  // ----------------------------------------------------------
+  // ----------------------------------------------------------
+  with TSplitter.Create(frm) do
+  begin
+    Align := alBottom;
+    Parent := frm;
+    Height := 5;
+  end;
+  DBGrid1.Margins.Bottom := 0;
+  DataSrc2 := TDataSource.Create(frm);
+  DBGrid2 := TDBGrid.Create(frm);
+  DBGrid2.AlignWithMargins := True;
+  DBGrid2.Parent := frm;
+  DBGrid2.Align := alBottom;
+  DBGrid2.Height := frm.Height div 3;
+  DBGrid2.DataSource := DataSrc2;
+  DataSrc2.DataSet := DataModMain.mtabReports;
+  DBGrid2.Margins.Top := 0;
+  AutoSizeColumns(DBGrid2);
 end;
 
 procedure TForm1.ChromeTabs1ButtonCloseTabClick(Sender: TObject;
@@ -510,7 +511,7 @@ begin
   //
   // Developer mode id used to change application configuration
   // during test
-  { TODO 2: [Helper] TApplication.IsDeveloperMode }
+  { TODO 2: [C] [Helper] TApplication.IsDeveloperMode }
 {$IFDEF DEBUG}
   Extention := '.dpr';
   ExeName := ExtractFileName(Application.ExeName);
@@ -589,7 +590,7 @@ begin
   //
   // Create and show Welcome Frame
   //
-  { TODO 2: [B] Extract method. Read comments and use meaningful }
+  { TODO 2: [A] Extract method. Read comments and use meaningful }
   frm := TFrameWelcome.Create(pnMain);
   frm.Parent := pnMain;
   frm.Visible := True;

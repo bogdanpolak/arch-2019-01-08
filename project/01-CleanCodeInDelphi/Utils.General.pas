@@ -5,7 +5,7 @@ interface
 uses
   Vcl.Controls;
 
-{ TODO 2: [Helper] TWinControl class helper }
+{ TODO 2: [C] [Helper] TWinControl class helper }
 procedure HideAllChildFrames(AParenControl: TWinControl);
 
 implementation

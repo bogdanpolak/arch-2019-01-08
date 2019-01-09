@@ -387,13 +387,12 @@ object Form1: TForm1
       AlignWithMargins = True
       Left = 7
       Top = 52
-      Width = 221
+      Width = 72
       Height = 13
       Margins.Top = 6
       Margins.Bottom = 0
       Align = alTop
       Caption = 'Readed Books:'
-      ExplicitWidth = 72
     end
     object Splitter1: TSplitter
       Left = 4
@@ -410,13 +409,12 @@ object Form1: TForm1
       AlignWithMargins = True
       Left = 7
       Top = 218
-      Width = 221
+      Width = 78
       Height = 13
       Margins.Top = 0
       Margins.Bottom = 0
       Align = alTop
       Caption = 'Avaliable Books:'
-      ExplicitWidth = 78
     end
     object lbxBooksReaded: TListBox
       AlignWithMargins = True
@@ -428,7 +426,6 @@ object Form1: TForm1
       Align = alTop
       ItemHeight = 13
       TabOrder = 0
-      ExplicitLeft = 5
     end
     object lbxBooksAvaliable2: TListBox
       AlignWithMargins = True
