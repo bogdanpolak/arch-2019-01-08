@@ -101,13 +101,6 @@ begin
   AutoHeightBookListBoxes();
 end;
 
-{ DONE 2: [C] [Helper] TWinControl class helper }
-
-
-// ple
-
-
-
 function AutoSizeColumns(DBGrid: TDBGrid; const MaxRows: Integer = 25): Integer;
 var
   DataSet: TDataSet;
