@@ -41,7 +41,7 @@ type
     procedure AutoHeightBookListBoxes();
     procedure InjectBooksDBGrid(aParent: TWinControl);
     function CreateTab(nazwa: String):TFrame;
-    procedure JsBookTryBlock(jsBooks: TJSONArray; var b: TBook);
+    procedure InsertJsonBooksToDataset(jsBooks: TJSONArray);
   public
     FDConnection1: TFDConnectionMock;
   end;
@@ -298,7 +298,7 @@ begin
   { DONE 2: [A] Extract method. Read comments and use meaningful name }
   jsBooks := ImportBooksFromWebService(Client_API_Token);
   try
-   JsBookTryBlock(jsBooks, b);
+   InsertJsonBooksToDataset(jsBooks);
   finally
     jsBooks.Free;
   end;
@@ -543,10 +543,11 @@ begin
  Result:=frm;
 end;
 
-procedure TForm1.JsBookTryBlock(jsBooks: TJSONArray; var b: TBook);
+procedure TForm1.InsertJsonBooksToDataset(jsBooks: TJSONArray);
 var
   jsBook: TJSONObject;
   TextBookReleseDate: string;
+  b: TBook;
   b2: TBook;
   i: Integer;
 begin
