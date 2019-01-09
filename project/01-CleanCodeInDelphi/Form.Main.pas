@@ -65,7 +65,7 @@ uses
   Utils.General,
   Data.Main,
   ClientAPI.Readers,
-  ClientAPI.Books;
+  ClientAPI.Books, Helper.TWinControl, Helper.TJsonObject;
 
 const
   IsInjectBooksDBGridInWelcomeFrame = True;
@@ -101,40 +101,12 @@ begin
   AutoHeightBookListBoxes();
 end;
 
-{ TODO 2: [C] [Helper] TWinControl class helper }
+{ DONE 2: [C] [Helper] TWinControl class helper }
 
 
 // ple
 
-function SumHeightForChildrens(Parent: TWinControl;
-  ControlsToExclude: TArray<TControl>): Integer;
-var
-  i: Integer;
-  ctrl: Vcl.Controls.TControl;
-  isExcluded: Boolean;
-  j: Integer;
-  sumHeight: Integer;
-  ctrlHeight: Integer;
-begin
-  sumHeight := 0;
-  for i := 0 to Parent.ControlCount - 1 do
-  begin
-    ctrl := Parent.Controls[i];
-    isExcluded := False;
-    for j := 0 to Length(ControlsToExclude) - 1 do
-      if ControlsToExclude[j] = ctrl then
-        isExcluded := True;
-    if not isExcluded then
-    begin
-      if ctrl.AlignWithMargins then
-        ctrlHeight := ctrl.Height + ctrl.Margins.Top + ctrl.Margins.Bottom
-      else
-        ctrlHeight := ctrl.Height;
-      sumHeight := sumHeight + ctrlHeight;
-    end;
-  end;
-  Result := sumHeight;
-end;
+
 
 function AutoSizeColumns(DBGrid: TDBGrid; const MaxRows: Integer = 25): Integer;
 var
@@ -207,29 +179,6 @@ end;
 //
 // Function checks is TJsonObject has field and this field has not null value
 //
-{ TODO 2: [C] [Helper] TJSONObject Class helpper and more minigful name expected }
-function fieldAvaliable(jsObject: TJSONObject; const fieldName: string)
-  : Boolean; inline;
-begin
-  Result := Assigned(jsObject.Values[fieldName]) and not jsObject.Values
-    [fieldName].Null;
-end;
-
-{ TODO 2: [C] [Helper] TJSONObject Class helpper and this method has two responsibilities }
-// Warning! In-out var parameter
-// extract separate:  GetIsoDateUtc
-function IsValidIsoDateUtc(jsObj: TJSONObject; const Field: string;
-  var dt: TDateTime): Boolean;
-begin
-  dt := 0;
-  try
-    dt := System.DateUtils.ISO8601ToDate(jsObj.Values[Field].Value, False);
-    Result := True;
-  except
-    on E: Exception do
-      Result := False;
-  end
-end;
 
 { TODO 2: Move into Utils.General }
 function CheckEmail(const s: string): Boolean;
@@ -274,9 +223,13 @@ var
   email: string;
 begin
   email := jsRow.Values['email'].Value;
+
   if not CheckEmail(email) then
     raise Exception.Create('Invalid email addres');
-  if not IsValidIsoDateUtc(jsRow, 'created', dtReported) then
+
+  if not jsRow.IsValidIsoDateUtc('created') then
+    dtReported := jsRow.GetIsoDateUtcFromValidatedValue('created')
+  else
     raise Exception.Create('Invalid date. Expected ISO format');
 end;
 
@@ -392,31 +345,37 @@ begin
       // Get JSON object values into local variables
       //
       email := jsRow.Values['email'].Value;
-      if fieldAvaliable(jsRow, 'firstname') then
+      if jsRow.IsFieldAvaliable('firstname') then
         firstName := jsRow.Values['firstname'].Value
       else
         firstName := '';
-      if fieldAvaliable(jsRow, 'lastname') then
+
+      if jsRow.IsFieldAvaliable('lastname') then
         lastName := jsRow.Values['lastname'].Value
       else
         lastName := '';
-      if fieldAvaliable(jsRow, 'company') then
+
+      if jsRow.IsFieldAvaliable('company') then
         company := jsRow.Values['company'].Value
       else
         company := '';
-      if fieldAvaliable(jsRow, 'book-isbn') then
+
+      if jsRow.IsFieldAvaliable('book-isbn') then
         bookISBN := jsRow.Values['book-isbn'].Value
       else
         bookISBN := '';
-      if fieldAvaliable(jsRow, 'book-title') then
+
+      if jsRow.IsFieldAvaliable('book-title') then
         bookTitle := jsRow.Values['book-title'].Value
       else
         bookTitle := '';
-      if fieldAvaliable(jsRow, 'rating') then
+
+      if jsRow.IsFieldAvaliable('rating') then
         rating := (jsRow.Values['rating'] as TJSONNumber).AsInt
       else
         rating := -1;
-      if fieldAvaliable(jsRow, 'oppinion') then
+
+      if jsRow.IsFieldAvaliable('oppinion') then
         oppinion := jsRow.Values['oppinion'].Value
       else
         oppinion := '';
@@ -558,7 +517,7 @@ begin
     labelPixelHeight := Canvas.TextHeight('Zg');
     Free;
   end;
-  sum := SumHeightForChildrens(GroupBox1, [lbxBooksReaded, lbxBooksAvaliable2]);
+  sum := GroupBox1.SumHeightForChildrens([lbxBooksReaded, lbxBooksAvaliable2]);
   avaliable := GroupBox1.Height - sum - labelPixelHeight;
   if GroupBox1.AlignWithMargins then
     avaliable := avaliable - GroupBox1.Padding.Top - GroupBox1.Padding.Bottom;
