@@ -23,7 +23,9 @@ uses
   DataAccess.Readers.FireDAC in 'experimental\DataAccess.Readers.FireDAC.pas',
   DataAccess.Readers in 'experimental\DataAccess.Readers.pas',
   Scripts.Readers in 'experimental\Scripts.Readers.pas',
-  Helper.TDataSet in 'Helper.TDataSet.pas';
+  Helper.TDataSet in 'Helper.TDataSet.pas',
+  Helper.TWinControl in 'Helper.TWinControl.pas',
+  Helper.TJsonObject in 'Helper.TJsonObject.pas';
 
 {$R *.res}
 
