@@ -63,6 +63,7 @@ uses
   // ----------------------------------------------------------------------
   Helper.TDataSet,
   Helper.TJSONObject,
+  Helper.TApplication,
   // ----------------------------------------------------------------------
   Consts.Application,
   Utils.CipherAES128,
@@ -72,9 +73,11 @@ uses
   ClientAPI.Books,
   Frame.Import,
   Frame.Welcome;
+  Helper.TWinControl, 
+  Helper.TJsonObject;
 
 const
-  IsInjectBooksDBGridInWelcomeFrame = False;
+  IsInjectBooksDBGridInWelcomeFrame = True;
 
 const
   SQL_SelectDatabaseVersion = 'SELECT versionnr FROM DBInfo';
@@ -107,44 +110,12 @@ begin
   AutoHeightBookListBoxes();
 end;
 
-{ TODO 2: [C] [Helper] TWinControl class helper }
-function SumHeightForChildrens(Parent: TWinControl;
-  ControlsToExclude: TArray<TControl>): Integer;
-var
-  i: Integer;
-  ctrl: Vcl.Controls.TControl;
-  isExcluded: Boolean;
-  j: Integer;
-  sumHeight: Integer;
-  ctrlHeight: Integer;
-begin
-  sumHeight := 0;
-  for i := 0 to Parent.ControlCount - 1 do
-  begin
-    ctrl := Parent.Controls[i];
-    isExcluded := False;
-    for j := 0 to Length(ControlsToExclude) - 1 do
-      if ControlsToExclude[j] = ctrl then
-        isExcluded := True;
-    if not isExcluded then
-    begin
-      if ctrl.AlignWithMargins then
-        ctrlHeight := ctrl.Height + ctrl.Margins.Top + ctrl.Margins.Bottom
-      else
-        ctrlHeight := ctrl.Height;
-      sumHeight := sumHeight + ctrlHeight;
-    end;
-  end;
-  Result := sumHeight;
-end;
-
-{ TODO 2: [C] [Helper] Extract into TDBGrid.ForEachRow class helper }
 function AutoSizeColumns(DBGrid: TDBGrid; const MaxRows: Integer = 25): Integer;
 var
   DataSet: TDataSet;
-  Bookmark: TBookmark;
   Count, i: Integer;
   ColumnsWidth: array of Integer;
+
 begin
   SetLength(ColumnsWidth, DBGrid.Columns.Count);
   for i := 0 to DBGrid.Columns.Count - 1 do
@@ -157,28 +128,44 @@ begin
     DataSet := DBGrid.DataSource.DataSet
   else
     DataSet := nil;
-  if (DataSet <> nil) and DataSet.Active then
-  begin
-    Bookmark := DataSet.GetBookmark;
-    DataSet.DisableControls;
-    try
-      Count := 0;
-      DataSet.First;
-      while not DataSet.Eof and (Count < MaxRows) do
+
+  DataSet.ForEachRow(MaxRows,
+      procedure
+      var
+        Column : TCollectionItem;
       begin
-        for i := 0 to DBGrid.Columns.Count - 1 do
-          if DBGrid.Columns[i].Visible then
-            ColumnsWidth[i] := Max(ColumnsWidth[i],
-              DBGrid.Canvas.TextWidth(DBGrid.Columns[i].Field.Text + '   '));
-        Inc(Count);
-        DataSet.Next;
-      end;
-    finally
-      DataSet.GotoBookmark(Bookmark);
-      DataSet.FreeBookmark(Bookmark);
-      DataSet.EnableControls;
-    end;
-  end;
+        for Column in DBGrid.Columns do
+          if TColumn(Column).Visible then
+            ColumnsWidth[TColumn(Column).Index] := Max(ColumnsWidth[TColumn(Column).Index],
+              DBGrid.Canvas.TextWidth(TColumn(Column).Field.Text + '   '));
+      end
+
+     ,Count);
+
+//
+//  if (DataSet <> nil) and DataSet.Active then
+//  begin
+//    Bookmark := DataSet.GetBookmark;
+//    DataSet.DisableControls;
+//    try
+//      Count := 0;
+//      DataSet.First;
+//      while not DataSet.Eof and (Count < MaxRows) do
+//      begin
+//        for i := 0 to DBGrid.Columns.Count - 1 do
+//          if DBGrid.Columns[i].Visible then
+//            ColumnsWidth[i] := Max(ColumnsWidth[i],
+//              DBGrid.Canvas.TextWidth(DBGrid.Columns[i].Field.Text + '   '));
+//        Inc(Count);
+//        DataSet.Next;
+//      end;
+//    finally
+//      DataSet.GotoBookmark(Bookmark);
+//      DataSet.FreeBookmark(Bookmark);
+//      DataSet.EnableControls;
+//    end;
+//  end;
+
   Count := 0;
   for i := 0 to DBGrid.Columns.Count - 1 do
     if DBGrid.Columns[i].Visible then
@@ -193,29 +180,6 @@ end;
 //
 // Function checks is TJsonObject has field and this field has not null value
 //
-{ TODO 2: [C] [Helper] TJSONObject Class helpper and more minigful name expected }
-function fieldAvaliable(jsObject: TJSONObject; const fieldName: string)
-  : Boolean; inline;
-begin
-  Result := Assigned(jsObject.Values[fieldName]) and not jsObject.Values
-    [fieldName].Null;
-end;
-
-{ TODO 2: [C] [Helper] TJSONObject Class helpper and this method has two responsibilities }
-// Warning! In-out var parameter
-// extract separate:  GetIsoDateUtc
-function IsValidIsoDateUtc(jsObj: TJSONObject; const Field: string;
-  var dt: TDateTime): Boolean;
-begin
-  dt := 0;
-  try
-    dt := System.DateUtils.ISO8601ToDate(jsObj.Values[Field].Value, False);
-    Result := True;
-  except
-    on E: Exception do
-      Result := False;
-  end
-end;
 
 { TODO 2: Move into Utils.General }
 function CheckEmail(const s: string): Boolean;
@@ -260,9 +224,13 @@ var
   email: string;
 begin
   email := jsRow.Values['email'].Value;
+
   if not CheckEmail(email) then
     raise Exception.Create('Invalid email addres');
-  if not IsValidIsoDateUtc(jsRow, 'created', dtReported) then
+
+  if not jsRow.IsValidIsoDateUtc('created') then
+    dtReported := jsRow.GetIsoDateUtcFromValidatedValue('created')
+  else
     raise Exception.Create('Invalid date. Expected ISO format');
 end;
 
@@ -371,26 +339,16 @@ begin
 end;
 
 procedure TForm1.FormCreate(Sender: TObject);
-var
-  Extention: string;
-  ExeName: string;
-  ProjectFileName: string;
+
 begin
   // ----------------------------------------------------------
   // Check: If we are in developer mode
   //
   // Developer mode id used to change application configuration
   // during test
-  { TODO 2: [C] [Helper] TApplication.IsDeveloperMode }
-{$IFDEF DEBUG}
-  Extention := '.dpr';
-  ExeName := ExtractFileName(Application.ExeName);
-  ProjectFileName := ChangeFileExt(ExeName, Extention);
-  FIsDeveloperMode := FileExists(ProjectFileName) or
-    FileExists('..\..\' + ProjectFileName);
-{$ELSE}
-  FDevMod := False;
-{$ENDIF}
+
+  FIsDeveloperMode := Application.IsDevelopeMode;
+
   pnMain.Caption := '';
 end;
 
@@ -407,7 +365,7 @@ begin
     labelPixelHeight := Canvas.TextHeight('Zg');
     Free;
   end;
-  sum := SumHeightForChildrens(GroupBox1, [lbxBooksReaded, lbxBooksAvaliable2]);
+  sum := GroupBox1.SumHeightForChildrens([lbxBooksReaded, lbxBooksAvaliable2]);
   avaliable := GroupBox1.Height - sum - labelPixelHeight;
   if GroupBox1.AlignWithMargins then
     avaliable := avaliable - GroupBox1.Padding.Top - GroupBox1.Padding.Bottom;
