@@ -10,9 +10,8 @@ uses
   {TODO 3: [D] Resolve dependency on ExtGUI.ListBox.Books. Too tightly coupled}
   // Dependency is requred by attribute TBooksListBoxConfigurator
   ExtGUI.ListBox.Books,
-  System.JSON,
-  Frame.Import,
-  Frame.Welcome;
+  System.JSON;
+
 
 type
   TForm1 = class(TForm)
@@ -41,8 +40,9 @@ type
     FIsDeveloperMode: Boolean;
     procedure AutoHeightBookListBoxes();
     procedure InjectBooksDBGrid(aParent: TWinControl);
-    procedure CreateTab(var frm: TFrameImport);
-    procedure CreateTabWelcome(var frm: TFrameWelcome);
+    function CreateTab(nazwa: String):TFrame;
+    //procedure CreateTabImport(var frm: TFrameImport);
+    //procedure CreateTabWelcome(var frm: TFrameWelcome);
     procedure JsBookTryBlock(jsBooks: TJSONArray; var b: TBook);
   public
     FDConnection1: TFDConnectionMock;
@@ -68,7 +68,9 @@ uses
   Utils.General,
   Data.Main,
   ClientAPI.Readers,
-  ClientAPI.Books;
+  ClientAPI.Books,
+  Frame.Import,
+  Frame.Welcome;
 
 const
   IsInjectBooksDBGridInWelcomeFrame = False;
@@ -295,14 +297,15 @@ begin
   //
   // Import new Books data from OpenAPI
   //
-  { TODO 2: [A] Extract method. Read comments and use meaningful name }
+  { DONE 2: [A] Extract method. Read comments and use meaningful name }
   jsBooks := ImportBooksFromWebService(Client_API_Token);
   try
    JsBookTryBlock(jsBooks, b);
   finally
     jsBooks.Free;
   end;
-  CreateTab(frm);
+  frm:= CreateTab('Readers') as TFrameImport;
+  //CreateTabImport(frm);
 
   // ----------------------------------------------------------
   // ----------------------------------------------------------
@@ -525,7 +528,26 @@ begin
   end;
 end;
 
-procedure TForm1.CreateTab(var frm: TFrameImport);
+
+function TForm1.CreateTab(nazwa: String):TFrame;
+var
+ frm: TFrame;
+ tab: TChromeTab;
+begin
+ frm := TFrame.Create(pnMain);
+
+ frm.Parent := pnMain;
+ frm.Visible := True;
+ frm.Align := alClient;
+ tab := ChromeTabs1.Tabs.Add;
+ tab.Caption := nazwa;
+ tab.Data := frm;
+
+ Result:=frm;
+end;
+
+{
+procedure TForm1.CreateTabImport(var frm: TFrameImport);
 var
   tab: TChromeTab;
 begin
@@ -539,6 +561,7 @@ begin
   //
   { DONE 2: [A] Extract method. Read comments and use meaningful }
   // Look for ChromeTabs1.Tabs.Add for code duplication
+{
   frm := TFrameImport.Create(pnMain);
   frm.Parent := pnMain;
   frm.Visible := True;
@@ -547,7 +570,9 @@ begin
   tab.Caption := 'Readers';
   tab.Data := frm;
 end;
+}
 
+{
 procedure TForm1.CreateTabWelcome(var frm: TFrameWelcome);
 var
   tab: TChromeTab;
@@ -558,7 +583,7 @@ begin
   // Create and show Welcome Frame
   //
   { DONE 2: [A] Extract method. Read comments and use meaningful }
-  frm := TFrameWelcome.Create(pnMain);
+{  frm := TFrameWelcome.Create(pnMain);
   frm.Parent := pnMain;
   frm.Visible := True;
   frm.Align := alClient;
@@ -566,6 +591,7 @@ begin
   tab.Caption := 'Welcome';
   tab.Data := frm;
 end;
+}
 
 procedure TForm1.JsBookTryBlock(jsBooks: TJSONArray; var b: TBook);
 var
@@ -619,7 +645,8 @@ begin
   tmrAppReady.Enabled := False;
   if FIsDeveloperMode then
     ReportMemoryLeaksOnShutdown := True;
-  CreateTabWelcome(frm);
+  //CreateTabWelcome(frm);
+  frm:= CreateTab('Welcome') as TFrameWelcome;
   // ----------------------------------------------------------
   // ----------------------------------------------------------
   //
