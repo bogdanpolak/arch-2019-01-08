@@ -40,7 +40,7 @@ type
     FIsDeveloperMode: Boolean;
     procedure AutoHeightBookListBoxes();
     procedure InjectBooksDBGrid(aParent: TWinControl);
-    function CreateTab(nazwa: String):TFrame;
+    function CreateTab(const nazwa: String):TFrame;
     procedure InsertJsonBooksToDataset(jsBooks: TJSONArray; DataSet: TDataSet);
   public
     FDConnection1: TFDConnectionMock;
@@ -526,12 +526,16 @@ begin
 end;
 
 
-function TForm1.CreateTab(nazwa: String):TFrame;
+function TForm1.CreateTab(const nazwa: String):TFrame;
 var
  frm: TFrame;
  tab: TChromeTab;
 begin
- frm := TFrame.Create(pnMain);
+ frm:= TFrameImport.Create(pnMain);;
+ if nazwa ='Readers' then
+  frm := TFrameImport.Create(pnMain)
+ else if nazwa ='Welcome' then
+  frm := TFrameWelcome.Create(pnMain);
 
  frm.Parent := pnMain;
  frm.Visible := True;
