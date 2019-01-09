@@ -6,6 +6,7 @@ uses
   Winapi.Windows, System.Classes, Vcl.StdCtrls, Vcl.Controls,  Vcl.Forms,
   Vcl.ExtCtrls,
   ChromeTabs, ChromeTabsClasses, ChromeTabsTypes,
+  System.JSON,
   Fake.FDConnection,
   {TODO 3: [D] Resolve dependency on ExtGUI.ListBox.Books. Too tightly coupled}
   // Dependency is requred by attribute TBooksListBoxConfigurator
@@ -38,6 +39,8 @@ type
     FIsDeveloperMode: Boolean;
     procedure AutoHeightBookListBoxes();
     procedure InjectBooksDBGrid(aParent: TWinControl);
+    function GetJSONValueAsString(jsRow: TJSONObject; FieldName: string): String;
+    function GetJSONValueAsInteger(jsRow: TJSONObject; FieldName: string): integer;    
   public
     FDConnection1: TFDConnectionMock;
   end;
@@ -52,7 +55,7 @@ implementation
 uses
   System.StrUtils, System.Math, System.DateUtils, System.SysUtils,
   System.RegularExpressions, Vcl.DBGrids, Data.DB, System.Variants,
-  Vcl.Graphics, System.JSON,
+  Vcl.Graphics,
   System.Generics.Collections,
   // ----------------------------------------------------------------------
   Helper.TDataSet,
@@ -364,41 +367,20 @@ begin
       ValidateJsonReaderReport (jsRow, dtReported);
       // ----------------------------------------------------------------
       { TODO 3: Extract Reader Report code into the record TReaderReport (model layer) }
-      { TODO 2: [B] Repeated code }
       // Use TJSONObject helper Values return Variant.Null
       // ----------------------------------------------------------------
       //
       // Get JSON object values into local variables
       //
-      email := jsRow.Values['email'].Value;
-      if fieldAvaliable(jsRow, 'firstname') then
-        firstName := jsRow.Values['firstname'].Value
-      else
-        firstName := '';
-      if fieldAvaliable(jsRow, 'lastname') then
-        lastName := jsRow.Values['lastname'].Value
-      else
-        lastName := '';
-      if fieldAvaliable(jsRow, 'company') then
-        company := jsRow.Values['company'].Value
-      else
-        company := '';
-      if fieldAvaliable(jsRow, 'book-isbn') then
-        bookISBN := jsRow.Values['book-isbn'].Value
-      else
-        bookISBN := '';
-      if fieldAvaliable(jsRow, 'book-title') then
-        bookTitle := jsRow.Values['book-title'].Value
-      else
-        bookTitle := '';
-      if fieldAvaliable(jsRow, 'rating') then
-        rating := (jsRow.Values['rating'] as TJSONNumber).AsInt
-      else
-        rating := -1;
-      if fieldAvaliable(jsRow, 'oppinion') then
-        oppinion := jsRow.Values['oppinion'].Value
-      else
-        oppinion := '';
+      email := GetJSONValueAsString(jsRow, 'email');
+      firstName := GetJSONValueAsString(jsRow, 'firstName');
+      lastName := GetJSONValueAsString(jsRow, 'lastname');
+      company := GetJSONValueAsString(jsRow, 'company');
+      bookISBN := GetJSONValueAsString(jsRow, 'book-isbn');
+      bookTitle := GetJSONValueAsString(jsRow, 'book-title');
+      rating := GetJSONValueAsInteger(jsRow, 'rating');
+      oppinion := GetJSONValueAsString(jsRow, 'oppinion');
+
       // ----------------------------------------------------------------
       //
       // Locate book by ISBN
@@ -565,6 +547,22 @@ begin
     datasrc.DataSet := DataModMain.mtabBooks;
     AutoSizeColumns(DataGrid);
   end;
+end;
+
+function TForm1.GetJSONValueAsInteger(jsRow: TJSONObject; FieldName: string): integer;
+begin
+  if fieldAvaliable(jsRow, FieldName) then
+    Result := (jsRow.Values[FieldName] as TJSONNumber).AsInt
+  else
+    Result := -1;
+end;
+
+function TForm1.GetJSONValueAsString(jsRow: TJSONObject; FieldName: string): String;
+begin
+  if fieldAvaliable(jsRow, FieldName) then
+    Result := jsRow.Values[FieldName].Value
+  else
+    Result := '';
 end;
 
 procedure TForm1.Splitter1Moved(Sender: TObject);
