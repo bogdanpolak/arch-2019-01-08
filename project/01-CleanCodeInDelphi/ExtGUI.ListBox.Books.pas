@@ -4,9 +4,7 @@ interface
 
 uses
   System.Classes, Vcl.StdCtrls, Vcl.Controls, System.Types, Vcl.Graphics,
-  Vcl.ComCtrls, { TODO 1 : [0]  Remove unit Vcl.ComCtrls }
   Winapi.Windows,
-  System.SysUtils,  { TODO 1 : [0]  Remove unit System.SysUtils }
   System.JSON, System.Generics.Collections,
   DataAccess.Books;
 
@@ -68,8 +66,8 @@ type
 implementation
 
 uses
-  ClientAPI.Books, { TODO 1 : [0]  Remove unit ClientAPI.Books }
-  DataAccess.Books.FireDAC, Data.Main;
+  DataAccess.Books.FireDAC,
+  Data.Main;
 
 const
   { TODO 1 : [0] Remove const Books_API_Token }
@@ -77,7 +75,6 @@ const
 
 constructor TBooksListBoxConfigurator.Create(AOwner: TComponent);
 var
-  OtherBooks: TBookCollection;
   b: TBook;
   BooksDAO: IBooksDAO;
 begin
@@ -107,13 +104,14 @@ begin
   inherited;
 end;
 
-function TBooksListBoxConfigurator.GetBookList (kind: TBookListKind): 
+function TBooksListBoxConfigurator.GetBookList (kind: TBookListKind):
   TBookCollection;
 begin
   case kind of
     blAll: Result := FAllBooks;
     blOnShelf: Result := FBooksOnShelf;
-    blAvaliable: Result := FBooksAvaliable;
+    blAvaliable: Result := FBooksAvaliable
+    else Result := FAllBooks;
   end;
 end;
 

@@ -1,19 +1,17 @@
 ﻿unit Form.Main;
-{ TODO 1 : [0]  Check out and remove all compiler warnings and hints }
 
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Grids, Vcl.DBGrids, Data.DB,
+  Winapi.Windows, System.Classes, Vcl.StdCtrls, Vcl.Controls,  Vcl.Forms,
+  Vcl.ExtCtrls,
   ChromeTabs, ChromeTabsClasses, ChromeTabsTypes,
-  Fake.FDConnection,
   {TODO 1: [0] Move System.JSON into implementation.}
   // System.JSON is required because of method ValidateBook
   // Change it into a public procedure and mark with TODO
   // TODO 3 (colon) Move this procedure into class (idea)
-  System.JSON,
+  System.Json,
+  Fake.FDConnection,
   {TODO 3: [D] Resolve dependency on ExtGUI.ListBox.Books. Too tightly coupled}
   // Dependency is requred by attribute TBooksListBoxConfigurator
   ExtGUI.ListBox.Books;
@@ -46,12 +44,10 @@ type
     FDevMod: Boolean;
     { TODO 1: Naming convention violation. It's not used .... check it }
     isDatabaseOK: Boolean;
-    { TODO 1: Variable is not used }
-    DragedIdx: Integer;
     { TODO 1: Meaningful name: AutoSizeBooksGroupBoxes }
     procedure ResizeGroupBox();
     { TODO 1: Meaningful name. Check comments in the implementation }
-    procedure ValidateBook(jsRow: TJSONObject; email: string;
+    procedure ValidateBook(jsRow: System.Json.TJSONObject; email: string;
       dtReported: TDateTime);
   public
     FDConnection1: TFDConnectionMock;
@@ -65,10 +61,17 @@ implementation
 {$R *.dfm}
 
 uses
-  System.StrUtils, System.Math, System.DateUtils,
-  System.RegularExpressions,
-  Frame.Welcome, Consts.Application, Utils.CipherAES128, Frame.Import,
-  Utils.General, Data.Main, ClientAPI.Readers, ClientAPI.Books;
+  System.StrUtils, System.Math, System.DateUtils, System.SysUtils,
+  System.RegularExpressions, Vcl.DBGrids, Data.DB, System.Variants,
+  Vcl.Graphics,
+  Frame.Welcome,
+  Consts.Application,
+  Utils.CipherAES128,
+  Frame.Import,
+  Utils.General,
+  Data.Main,
+  ClientAPI.Readers,
+  ClientAPI.Books;
 
 const
   SecureKey = 'delphi-is-the-best';
@@ -400,6 +403,8 @@ begin
       //
       // Validate imported Reader report
       //
+      // TODO 2: [E] Sprawdzić jak powinno być zainicjowane dtReported
+      dtReported := 0;
       { TODO 2: [E] Move validation up. Before reading data }
       ValidateBook(jsRow, email, dtReported);
       // ----------------------------------------------------------------
@@ -416,7 +421,7 @@ begin
       // ----------------------------------------------------------------
       //
       // Append a new reader into the database if requred:
-      if VarIsNull(readerId) then
+      if System.Variants.VarIsNull(readerId) then
       begin
         { TODO 2: [G] Extract method }
         readerId := DataModMain.GetMaxValueInDataSet(DataModMain.mtabReaders,
@@ -570,14 +575,6 @@ var
   UserName: string;
   password: string;
   res: Variant;
-  i: Integer;
-  b: TBook;
-  o: Boolean;
-  AllBooks: TBookCollection;
-  OtherBooks: TBookCollection;
-  booksCfg: TBooksListBoxConfigurator;
-  datasrc: TDataSource;
-  DataGrid: TDBGrid;
 begin
   tmrAppReady.Enabled := False;
   if FDevMod then

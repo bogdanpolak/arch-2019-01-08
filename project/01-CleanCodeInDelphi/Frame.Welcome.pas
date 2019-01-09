@@ -31,7 +31,9 @@ implementation
 
 {$R *.dfm}
 
-uses Consts.Application;
+uses
+  System.Contnrs,
+  Consts.Application;
 
 procedure TFrameWelcome.AddInfo(level: integer; const Msg: string;
   show: boolean);
