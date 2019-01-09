@@ -41,7 +41,7 @@ type
     procedure InjectBooksDBGrid(aParent: TWinControl);
     function GetJSONValueAsString(jsRow: TJSONObject; FieldName: string): String;
     function GetJSONValueAsInteger(jsRow: TJSONObject; FieldName: string): integer;
-    procedure SaveDataToDb(jsData: TJSONArray);
+    procedure ValidateReaders_InsertToDB(jsData: TJSONArray);
   public
     FDConnection1: TFDConnectionMock;
   end;
@@ -346,7 +346,7 @@ begin
   //
   jsData := ImportReaderReportsFromWebService(Client_API_Token);
   try
-    SaveDataToDb(jsData);
+    ValidateReaders_InsertToDB(jsData);
   finally
     jsData.Free;
   end;
@@ -493,7 +493,7 @@ begin
     Result := '';
 end;
 
-procedure TForm1.SaveDataToDb(jsData: TJSONArray);
+procedure TForm1.ValidateReaders_InsertToDB(jsData: TJSONArray);
 var
   i: Integer;
   jsRow: TJSONObject;
@@ -523,6 +523,7 @@ begin
       //
       // Get JSON object values into local variables
       //
+      { TODO 3: Change variables into TReaderRecord }
       email := GetJSONValueAsString(jsRow, 'email');
       firstName := GetJSONValueAsString(jsRow, 'firstName');
       lastName := GetJSONValueAsString(jsRow, 'lastname');
