@@ -7,9 +7,13 @@ uses
 
 type
   TJSONObjectHelper = class helper for TJSONObject
+    // TODO 1: Nazwa metody: IsPairAvaliableAndNotNull (const Key: string)
     function FieldAvaliable(const fieldName: string): Boolean; inline;
+    // TODO 1: Nazwa metody: GetPairValueAsString (const Key: string)
     function GetJSONValueAsString(const fieldName: string): String;
+    // TODO 1: Nazwa metody: GetPairValueAsInteger (const Key: string)
     function GetJSONValueAsInteger(const fieldName: string): integer;
+    // TODO 1: Nazwa metody: GetPairValueAsUtcDate (const Key: string)
     function GetIsoDateUtcFromValidatedValue(const Field: string): TDateTime;
     function IsValidIsoDateUtc(const Field: string): Boolean;
   end;

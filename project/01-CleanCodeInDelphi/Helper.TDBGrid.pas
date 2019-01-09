@@ -9,7 +9,9 @@ uses
 
 type
   TDBGridHelper = class helper for TDBGrid
+    // TODO 1: Przedyskutowaæ u¿ycie
     procedure ForEachColumn (ProcedureToRun : TProc<TColumn>);
+    // TODO 1: Dodaæ AutoResizeAllColumnsWidth
   end;
 
 implementation

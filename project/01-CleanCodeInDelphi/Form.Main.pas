@@ -39,6 +39,8 @@ type
     FIsDeveloperMode: Boolean;
     procedure AutoHeightBookListBoxes();
     procedure InjectBooksDBGrid(aParent: TWinControl);
+    // TODO 1: Nazwa CreateFrameAndAddChromeTab (FrameKind, Caption)
+    // TFrameKind = fkWelcomeFrame, fkImportFrame
     function CreateTab(const nazwa: String): TFrame;
     procedure InsertJsonBooksToDataset(jsBooks: TJSONArray; DataSet: TDataSet);
     procedure ValidateReaders_InsertToDB(jsData: TJSONArray);
