@@ -111,7 +111,6 @@ end;
 function AutoSizeColumns(DBGrid: TDBGrid; const MaxRows: Integer = 25): Integer;
 var
   DataSet: TDataSet;
-  Bookmark: TBookmark;
   Count, i: Integer;
   ColumnsWidth: array of Integer;
 
