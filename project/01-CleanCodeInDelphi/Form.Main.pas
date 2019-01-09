@@ -9,7 +9,10 @@ uses
   Fake.FDConnection,
   {TODO 3: [D] Resolve dependency on ExtGUI.ListBox.Books. Too tightly coupled}
   // Dependency is requred by attribute TBooksListBoxConfigurator
-  ExtGUI.ListBox.Books;
+  ExtGUI.ListBox.Books,
+  System.JSON,
+  Frame.Import,
+  Frame.Welcome;
 
 type
   TForm1 = class(TForm)
@@ -38,6 +41,9 @@ type
     FIsDeveloperMode: Boolean;
     procedure AutoHeightBookListBoxes();
     procedure InjectBooksDBGrid(aParent: TWinControl);
+    procedure CreateTab(var frm: TFrameImport);
+    procedure CreateTabWelcome(var frm: TFrameWelcome);
+    procedure JsBookTryBlock(jsBooks: TJSONArray; var b: TBook);
   public
     FDConnection1: TFDConnectionMock;
   end;
@@ -52,15 +58,13 @@ implementation
 uses
   System.StrUtils, System.Math, System.DateUtils, System.SysUtils,
   System.RegularExpressions, Vcl.DBGrids, Data.DB, System.Variants,
-  Vcl.Graphics, System.JSON,
+  Vcl.Graphics,
   System.Generics.Collections,
   // ----------------------------------------------------------------------
   Helper.TDataSet,
   // ----------------------------------------------------------------------
-  Frame.Welcome,
   Consts.Application,
   Utils.CipherAES128,
-  Frame.Import,
   Utils.General,
   Data.Main,
   ClientAPI.Readers,
@@ -264,7 +268,6 @@ end;
 procedure TForm1.btnImportClick(Sender: TObject);
 var
   frm: TFrameImport;
-  tab: TChromeTab;
   jsData: TJSONArray;
   DBGrid1: TDBGrid;
   DataSrc1: TDataSource;
@@ -286,9 +289,6 @@ var
   readerId: Variant;
   b: TBook;
   jsBooks: TJSONArray;
-  jsBook: TJSONObject;
-  TextBookReleseDate: string;
-  b2: TBook;
 begin
   // ----------------------------------------------------------
   // ----------------------------------------------------------
@@ -298,54 +298,12 @@ begin
   { TODO 2: [A] Extract method. Read comments and use meaningful name }
   jsBooks := ImportBooksFromWebService(Client_API_Token);
   try
-    for i := 0 to jsBooks.Count - 1 do
-    begin
-      jsBook := jsBooks.Items[i] as TJSONObject;
-      b := TBook.Create;
-      b.status := jsBook.Values['status'].Value;
-      b.title := jsBook.Values['title'].Value;
-      b.isbn := jsBook.Values['isbn'].Value;
-      b.author := jsBook.Values['author'].Value;
-      TextBookReleseDate := jsBook.Values['date'].Value;
-      b.releseDate := BooksToDateTime(TextBookReleseDate);
-      b.pages := (jsBook.Values['pages'] as TJSONNumber).AsInt;
-      b.price := StrToCurr(jsBook.Values['price'].Value);
-      b.currency := jsBook.Values['currency'].Value;
-      b.description := jsBook.Values['description'].Value;
-      b.imported := Now();
-      b2 := FBooksConfig.GetBookList(blkAll).FindByISBN(b.isbn);
-      if not Assigned(b2) then
-      begin
-        FBooksConfig.InsertNewBook(b);
-        // ----------------------------------------------------------------
-        // Append report into the database:
-        // Fields: ISBN, Title, Authors, Status, ReleseDate, Pages, Price,
-        // Currency, Imported, Description
-        DataModMain.mtabBooks.InsertRecord([b.isbn, b.title, b.author,
-          b.status, b.releseDate, b.pages, b.price, b.currency, b.imported,
-          b.description]);
-      end;
-    end;
+   JsBookTryBlock(jsBooks, b);
   finally
     jsBooks.Free;
   end;
-  // ----------------------------------------------------------
-  // ----------------------------------------------------------
-  //
-  // Create new frame, show it add to ChromeTabs
-  // 1. Create TFrameImport.
-  // 2. Embed frame in pnMain (show)
-  // 3. Add new ChromeTab
-  //
-  { TODO 2: [A] Extract method. Read comments and use meaningful }
-  // Look for ChromeTabs1.Tabs.Add for code duplication
-  frm := TFrameImport.Create(pnMain);
-  frm.Parent := pnMain;
-  frm.Visible := True;
-  frm.Align := alClient;
-  tab := ChromeTabs1.Tabs.Add;
-  tab.Caption := 'Readers';
-  tab.Data := frm;
+  CreateTab(frm);
+
   // ----------------------------------------------------------
   // ----------------------------------------------------------
   //
@@ -567,6 +525,83 @@ begin
   end;
 end;
 
+procedure TForm1.CreateTab(var frm: TFrameImport);
+var
+  tab: TChromeTab;
+begin
+  // ----------------------------------------------------------
+  // ----------------------------------------------------------
+  //
+  // Create new frame, show it add to ChromeTabs
+  // 1. Create TFrameImport.
+  // 2. Embed frame in pnMain (show)
+  // 3. Add new ChromeTab
+  //
+  { DONE 2: [A] Extract method. Read comments and use meaningful }
+  // Look for ChromeTabs1.Tabs.Add for code duplication
+  frm := TFrameImport.Create(pnMain);
+  frm.Parent := pnMain;
+  frm.Visible := True;
+  frm.Align := alClient;
+  tab := ChromeTabs1.Tabs.Add;
+  tab.Caption := 'Readers';
+  tab.Data := frm;
+end;
+
+procedure TForm1.CreateTabWelcome(var frm: TFrameWelcome);
+var
+  tab: TChromeTab;
+begin
+  // ----------------------------------------------------------
+  // ----------------------------------------------------------
+  //
+  // Create and show Welcome Frame
+  //
+  { DONE 2: [A] Extract method. Read comments and use meaningful }
+  frm := TFrameWelcome.Create(pnMain);
+  frm.Parent := pnMain;
+  frm.Visible := True;
+  frm.Align := alClient;
+  tab := ChromeTabs1.Tabs.Add;
+  tab.Caption := 'Welcome';
+  tab.Data := frm;
+end;
+
+procedure TForm1.JsBookTryBlock(jsBooks: TJSONArray; var b: TBook);
+var
+  jsBook: TJSONObject;
+  TextBookReleseDate: string;
+  b2: TBook;
+  i: Integer;
+begin
+  for i := 0 to jsBooks.Count - 1 do
+  begin
+    jsBook := jsBooks.Items[i] as TJSONObject;
+    b := TBook.Create;
+    b.status := jsBook.Values['status'].Value;
+    b.title := jsBook.Values['title'].Value;
+    b.isbn := jsBook.Values['isbn'].Value;
+    b.author := jsBook.Values['author'].Value;
+    TextBookReleseDate := jsBook.Values['date'].Value;
+    b.releseDate := BooksToDateTime(TextBookReleseDate);
+    b.pages := (jsBook.Values['pages'] as TJSONNumber).AsInt;
+    b.price := StrToCurr(jsBook.Values['price'].Value);
+    b.currency := jsBook.Values['currency'].Value;
+    b.description := jsBook.Values['description'].Value;
+    b.imported := Now;
+    b2 := FBooksConfig.GetBookList(blkAll).FindByISBN(b.isbn);
+    if not Assigned(b2) then
+    begin
+      FBooksConfig.InsertNewBook(b);
+      // ----------------------------------------------------------------
+      // Append report into the database:
+      // Fields: ISBN, Title, Authors, Status, ReleseDate, Pages, Price,
+      // Currency, Imported, Description
+      DataModMain.mtabBooks.InsertRecord([b.isbn, b.title, b.author, b.status, b.releseDate, b.pages, b.price, b.currency, b.imported, b.description]);
+    end;
+  end;
+end;
+
 procedure TForm1.Splitter1Moved(Sender: TObject);
 begin
   (Sender as TSplitter).Tag := 1;
@@ -575,7 +610,6 @@ end;
 procedure TForm1.tmrAppReadyTimer(Sender: TObject);
 var
   frm: TFrameWelcome;
-  tab: TChromeTab;
   VersionNr: Integer;
   msg1: string;
   UserName: string;
@@ -585,19 +619,7 @@ begin
   tmrAppReady.Enabled := False;
   if FIsDeveloperMode then
     ReportMemoryLeaksOnShutdown := True;
-  // ----------------------------------------------------------
-  // ----------------------------------------------------------
-  //
-  // Create and show Welcome Frame
-  //
-  { TODO 2: [A] Extract method. Read comments and use meaningful }
-  frm := TFrameWelcome.Create(pnMain);
-  frm.Parent := pnMain;
-  frm.Visible := True;
-  frm.Align := alClient;
-  tab := ChromeTabs1.Tabs.Add;
-  tab.Caption := 'Welcome';
-  tab.Data := frm;
+  CreateTabWelcome(frm);
   // ----------------------------------------------------------
   // ----------------------------------------------------------
   //
