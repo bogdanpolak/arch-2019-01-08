@@ -9,11 +9,13 @@ uses
   FireDAC.Comp.Client,
   FireDAC.DApt,
   FireDAC.Stan.Param,
-  FireDAC.Stan.Async;
+  FireDAC.Stan.Async,
+  DataProxy.OrderDetails;
 
 type
-  TOrderDAO = class(TDatasetProxy)
+  TOrderProxy = class(TDatasetProxy)
   protected
+    FOrderDetails: TOrderDetailsProxy;
     procedure ConnectFields; override;
   public
     OrderID: TIntegerField;
@@ -26,6 +28,7 @@ type
     Freight: TBCDField;
     procedure Open(OrderID: integer);
     procedure Close;
+    function QuantitySum: Integer;
     // property DataSet: TDataSet read FDataSet;
   end;
 
@@ -40,12 +43,13 @@ const
     ' RequiredDate,ShippedDate,ShipVia,Freight FROM {id Orders} ' +
     ' WHERE OrderID = :OrderID';
 
-procedure TOrderDao.Close;
+procedure TOrderProxy.Close;
 begin
-
+  FOrderDetails.Close;
+  FOrderDetails.Free;
 end;
 
-procedure TOrderDao.ConnectFields;
+procedure TOrderProxy.ConnectFields;
 begin
   OrderID := FDataSet.FieldByName('OrderID') as TIntegerField;
   CustomerID := FDataSet.FieldByName('CustomerID') as TStringField;
@@ -57,7 +61,7 @@ begin
   Freight := FDataSet.FieldByName('Freight') as TBCDField;
 end;
 
-procedure TOrderDao.Open(OrderID: integer);
+procedure TOrderProxy.Open(OrderID: integer);
 var
   fdq: TFDQuery;
   cust: string;
@@ -76,11 +80,18 @@ begin
   (FDataSet as TFDQuery).ParamByName('OrderID').AsInteger := OrderID;
   FDataSet.Open;
   ConnectFields;
+  FOrderDetails := TOrderDetailsProxy.Create(nil);
+  FOrderDetails.Open(OrderID);
   id := self.OrderID.AsString;
   cust := self.CustomerID.AsString;
 {$IFDEF CONSOLEAPP}
   WriteLn('DataSet opened.... OrderID: ',id,' for customer: ',cust);
 {$ENDIF}
+end;
+
+function TOrderProxy.QuantitySum: Integer;
+begin
+  Result := FOrderDetails.QuantitySum;
 end;
 
 end.

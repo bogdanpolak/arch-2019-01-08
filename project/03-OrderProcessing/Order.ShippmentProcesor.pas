@@ -5,13 +5,15 @@ interface
 uses
   Shippment,
   DataProxy.Order,
+  DataProxy.OrderDetails,
   Order.Validator;
 
 type
   TShipmentProcessor = class
   private
     FShippment: TShippment;
-    FOrder: TOrderDAO;
+    FOrder: TOrderProxy;
+//    FOrderDetails: TOrderDetailsProxy;
     FOrderValidator: TOrderValidator;
   public
     constructor Create(aShippment: TShippment);
@@ -25,26 +27,36 @@ implementation
 constructor TShipmentProcessor.Create(aShippment: TShippment);
 begin
   FShippment := aShippment;
-  FOrder := TOrderDao.Create(nil);
+  FOrder := TOrderProxy.Create(nil);
+//  FOrderDetails := TOrderDetailsProxy.Create(nil);
   FOrderValidator := TOrderValidator.Create;
 end;
 
 destructor TShipmentProcessor.Destroy;
 begin
+  FOrder.Close;
   FOrder.Free;
+//  FOrderDetails.Free;
   FOrderValidator.Free;
   inherited;
 end;
 
 procedure TShipmentProcessor.ShipCurrentOrder;
+var
+  isValid: Boolean;
 begin
   FOrder.Open(FShippment.OrderID);
-  FOrderValidator.isValid(FOrder);
-  // if isValid then
+//  FOrderDetails.Open(FShippment.OrderID);
+  isValid := FOrderValidator.isValid(FOrder);
+  //if isValid then
   // FOrder.Post;
 {$IFDEF CONSOLEAPP}
-  WriteLn('Order has been processed....');
+  if isValid then
+    WriteLn('Order has been processed...succefull')
+  else
+    WriteLn('Order has been processed...failed')
 {$ENDIF}
+
 end;
 
 end.
