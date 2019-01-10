@@ -9,7 +9,9 @@ uses
   // FireDAC connection ------------------------------
   FireDAC.Stan.Def,
   // InterBase ------------------------------
-  FireDAC.Phys.IBDef, FireDAC.Phys.IBBase, FireDAC.Phys.IB;
+  FireDAC.Phys.IBBase,
+  FireDAC.Phys.FBDef, FireDAC.Phys.FB,
+  FireDAC.Phys.IBDef, FireDAC.Phys.IB;
 
 type
   TInterbaseDatabaseConnector = class (TDatabaseConnector)
@@ -22,7 +24,7 @@ implementation
 function TInterbaseDatabaseConnector.GetNewConnection: TFDConnection;
 begin
   Result := TFDConnection.Create(nil);
-  Result.Open('IB_Demo');
+  Result.Open('FB_Demo');
 {$IFDEF CONSOLEAPP}
   WriteLn('Interbase connection with IB_Demo created....');
 {$ENDIF}
