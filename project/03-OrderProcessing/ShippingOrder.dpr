@@ -14,7 +14,10 @@ uses
   Database.Connector.Interbase in 'Database.Connector.Interbase.pas',
   Database.Connector in 'Database.Connector.pas',
   Main in 'Main.pas',
-  Shippment in 'Shippment.pas';
+  Shippment in 'Shippment.pas',
+  DataProxy.Customers in 'DataProxy.Customers.pas',
+  DataProxy.Products in 'DataProxy.Products.pas',
+  DataProxy.Categories in 'DataProxy.Categories.pas';
 
 begin
   try
