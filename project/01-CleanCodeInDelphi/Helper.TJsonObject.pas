@@ -7,15 +7,15 @@ uses
 
 type
   TJSONObjectHelper = class helper for TJSONObject
-    // TODO 1: Nazwa metody: IsPairAvaliableAndNotNull (const Key: string)
-    function FieldAvaliable(const fieldName: string): Boolean; inline;
-    // TODO 1: Nazwa metody: GetPairValueAsString (const Key: string)
-    function GetJSONValueAsString(const fieldName: string): String;
-    // TODO 1: Nazwa metody: GetPairValueAsInteger (const Key: string)
-    function GetJSONValueAsInteger(const fieldName: string): integer;
-    // TODO 1: Nazwa metody: GetPairValueAsUtcDate (const Key: string)
-    function GetIsoDateUtcFromValidatedValue(const Field: string): TDateTime;
-    function IsValidIsoDateUtc(const Field: string): Boolean;
+    function IsPairAvaliableAndNotNull(const Key: string): Boolean; inline;
+    function GetPairValueAsString(const Key: string): String;
+    function GetPairValueAsInteger(const Key: string): integer;
+    /// <summary>
+    ///  Pobiera warttoœæ pary JSON o kluczu Key. Traktujê j¹ jako tekst
+    ///  w formacie ISO Date (ISO8601) UTC i konwertuje j¹ do TDateTime
+    /// </summary>
+    function GetPairValueAsUtcDate(const Key: string): TDateTime;
+    function IsValidIsoDateUtc(const Key: string): Boolean;
   end;
 
 implementation
@@ -23,38 +23,38 @@ implementation
 uses
   System.DateUtils;
 
-function TJSONObjectHelper.FieldAvaliable(const fieldName: string): Boolean;
+function TJSONObjectHelper.IsPairAvaliableAndNotNull(const Key: string): Boolean;
 begin
-  Result := Assigned(Self.Values[fieldName]) and not Self.Values[fieldName].Null;
+  Result := Assigned(Self.Values[Key]) and not Self.Values[Key].Null;
 end;
 
-function TJSONObjectHelper.GetJSONValueAsInteger(const fieldName: string): integer;
+function TJSONObjectHelper.GetPairValueAsInteger(const Key: string): integer;
 begin
-  if fieldAvaliable(fieldName) then
-    Result := (Self.Values[fieldName] as TJSONNumber).AsInt
+  if IsPairAvaliableAndNotNull(Key) then
+    Result := (Self.Values[Key] as TJSONNumber).AsInt
   else
     Result := -1;
 end;
 
-function TJSONObjectHelper.GetJSONValueAsString(const fieldName: string): String;
+function TJSONObjectHelper.GetPairValueAsString(const Key: string): String;
 begin
-  if fieldAvaliable(fieldName) then
-    Result := Self.Values[fieldName].Value
+  if IsPairAvaliableAndNotNull(Key) then
+    Result := Self.Values[Key].Value
   else
     Result := '';
 end;
 
-function TJsonObjectHelper.IsValidIsoDateUtc(const Field: string): Boolean;
+function TJsonObjectHelper.IsValidIsoDateUtc(const Key: string): Boolean;
 var
   dt: TDateTime;
 begin
   dt := 0;
-  Result := System.DateUtils.TryISO8601ToDate(Self.Values[Field].Value, dt);
+  Result := System.DateUtils.TryISO8601ToDate(Self.Values[Key].Value, dt);
 end;
 
-function TJsonObjectHelper.GetIsoDateUtcFromValidatedValue(const Field: string) : TDateTime;
+function TJsonObjectHelper.GetPairValueAsUtcDate(const Key: string) : TDateTime;
 begin
-  Result := System.DateUtils.ISO8601ToDate(Self.Values[Field].Value, False);;
+  Result := System.DateUtils.ISO8601ToDate(Self.Values[Key].Value, False);;
 end;
 
 end.
