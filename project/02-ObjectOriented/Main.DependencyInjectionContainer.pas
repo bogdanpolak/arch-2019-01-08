@@ -131,7 +131,7 @@ type
 
 var
   GlobalAppConfiguration: TAppConfiguration = // ----
-    (ExecutionOption: Option_B_);
+    (ExecutionOption: Option_A_);
   GlobalDependencyContainer: TDependencyContainer;
 
 procedure DefineDependencies();
