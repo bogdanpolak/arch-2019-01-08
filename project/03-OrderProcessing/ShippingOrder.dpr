@@ -8,13 +8,14 @@ uses
   System.SysUtils,
   Order.ShippmentProcesor in 'Order.ShippmentProcesor.pas',
   Order.Validator in 'Order.Validator.pas',
-  DataProxy.Order in 'DataProxy.Order.pas',
+  DataProxy.OrderDetails in 'DataProxy.OrderDetails.pas',
   Data.DataProxy in 'Data.DataProxy.pas',
   Helper.TDataSet in 'Helper.TDataSet.pas',
   Database.Connector.Interbase in 'Database.Connector.Interbase.pas',
   Database.Connector in 'Database.Connector.pas',
   Main in 'Main.pas',
-  Shippment in 'Shippment.pas';
+  Shippment in 'Shippment.pas',
+  DataProxy.Order in 'DataProxy.Order.pas';
 
 begin
   try

@@ -12,7 +12,7 @@ uses
   FireDAC.Stan.Async;
 
 type
-  TOrderDAO = class(TDatasetProxy)
+  TOrderProxy = class(TDatasetProxy)
   protected
     procedure ConnectFields; override;
   public
@@ -24,7 +24,8 @@ type
     ShippedDate: TDateField;
     ShipVia: TIntegerField;
     Freight: TBCDField;
-    procedure Open(OrderID: integer);
+    procedure Open1(OrderID: integer); overload;
+    procedure Open2(EmployeeID: integer); overload;
     procedure Close;
     // property DataSet: TDataSet read FDataSet;
   end;
@@ -36,16 +37,20 @@ implementation
 uses Database.Connector;
 
 const
-  SQL_SELECT_Order = 'SELECT OrderID, CustomerID, EmployeeID, OrderDate, ' +
+  SQL_SELECT_Order1 = 'SELECT OrderID, CustomerID, EmployeeID, OrderDate, ' +
     ' RequiredDate,ShippedDate,ShipVia,Freight FROM {id Orders} ' +
     ' WHERE OrderID = :OrderID';
 
-procedure TOrderDao.Close;
+  SQL_SELECT_Order2 = 'SELECT OrderID, CustomerID, EmployeeID, OrderDate, ' +
+    ' RequiredDate,ShippedDate,ShipVia,Freight FROM {id Orders} ' +
+    ' WHERE EmployeeID = :EmployeeID';
+
+procedure TOrderProxy.Close;
 begin
 
 end;
 
-procedure TOrderDao.ConnectFields;
+procedure TOrderProxy.ConnectFields;
 begin
   OrderID := FDataSet.FieldByName('OrderID') as TIntegerField;
   CustomerID := FDataSet.FieldByName('CustomerID') as TStringField;
@@ -57,7 +62,7 @@ begin
   Freight := FDataSet.FieldByName('Freight') as TBCDField;
 end;
 
-procedure TOrderDao.Open(OrderID: integer);
+procedure TOrderProxy.Open1(OrderID: integer);
 var
   fdq: TFDQuery;
   cust: string;
@@ -81,6 +86,20 @@ begin
 {$IFDEF CONSOLEAPP}
   WriteLn('DataSet opened.... OrderID: ',id,' for customer: ',cust);
 {$ENDIF}
+end;
+
+
+procedure TOrderProxy.Open2(EmployeeID: integer);
+var
+  fdq: TFDQuery;
+begin
+  fdq := TFDQuery.Create(nil);
+  fdq.SQL.Text := SQL_SELECT_Order2;
+  fdq.Connection := GlobalConnector.GetMainConnection;
+  FDataSet := fdq;
+  (FDataSet as TFDQuery).ParamByName('EmployeeID').AsInteger := EmployeeID;
+  FDataSet.Open;
+  ConnectFields;
 end;
 
 end.

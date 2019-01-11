@@ -19,11 +19,13 @@ var
   Shippment: TShippment;
   processor: TShipmentProcessor;
 begin
-  Shippment := TShippment.Create(11077, Int(Now()), 3);
   GlobalConnector := TInterbaseDatabaseConnector.Create;
-  processor := TShipmentProcessor.Create(Shippment);
+  processor := TShipmentProcessor.Create(nil);
   try
-    processor.ShipCurrentOrder;
+    Shippment.OrderID := 11077;
+    Shippment.ShipmentDate := Int(Now());
+    Shippment.ShipperID := 3;
+    processor.ShipOrder(Shippment);
     WriteLn('Order successfully processed....');
   finally
     processor.Free;
