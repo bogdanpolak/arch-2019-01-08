@@ -27,7 +27,11 @@ uses
   Helper.TWinControl in 'Helper.TWinControl.pas',
   Helper.TJsonObject in 'Helper.TJsonObject.pas',
   Helper.TDBGrid in 'Helper.TDBGrid.pas',
-  Helper.TApplication in 'Helper.TApplication.pas';
+  Helper.TApplication in 'Helper.TApplication.pas',
+  Messaging.EventBus in 'Messaging.EventBus.pas',
+  MVC.Work in 'MVC.Work.pas',
+  Work.ImportReaderReports in 'Work.ImportReaderReports.pas',
+  Model.Books in 'Model.Books.pas';
 
 {$R *.res}
 

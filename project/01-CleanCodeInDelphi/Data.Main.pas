@@ -7,7 +7,7 @@ uses
   FireDAC.Stan.Intf, FireDAC.Stan.Option,
   FireDAC.Stan.Param, FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf,
   FireDAC.DApt.Intf, Data.DB, FireDAC.Comp.DataSet, FireDAC.Comp.Client,
-  FireDAC.Stan.StorageJSON;
+  FireDAC.Stan.StorageJSON, Model.Books;
 
 type
   TDataModMain = class(TDataModule)
@@ -47,12 +47,16 @@ type
     FDStanStorageJSONLink1: TFDStanStorageJSONLink;
   private
   public
+    BooksFactory: TBooksFactory;
     procedure OpenDataSets;
     function FindReaderByEmil (const email: string): Variant;
   end;
 
 var
   DataModMain: TDataModMain;
+
+const
+  EB_Main_Form_UpdateCaption = 1;
 
 implementation
 
@@ -109,6 +113,11 @@ begin
   //
   // Repoerts table
   mtabReports.CreateDataSet;
+  // ----------------------------------------------------------
+  // ----------------------------------------------------------
+  //
+  // Create BooksFactory
+  BooksFactory := TBooksFactory.Create(Self);
 end;
 
 end.

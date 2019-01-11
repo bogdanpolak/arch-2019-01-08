@@ -5,34 +5,12 @@ interface
 uses
   System.Classes, Vcl.StdCtrls, Vcl.Controls, System.Types, Vcl.Graphics,
   Winapi.Windows,
-  System.JSON, System.Generics.Collections,
-  DataAccess.Books;
+  System.JSON,
+  System.Generics.Collections,
+  Messaging.EventBus,
+  DataAccess.Books,
+  Model.Books;
 
-{ TODO 3: [C] Move class into the separate unit: Model.Book.pas }
-// with or without Book Collection?
-type
-  TBook = class
-    status: string;
-    title: string;
-    isbn: string;
-    author: string;
-    releseDate: TDateTime;
-    pages: integer;
-    price: currency;
-    currency: string;
-    imported: TDateTime;
-    description: string;
-    constructor Create(Books: IBooksDAO); overload;
-  end;
-
-  TBookCollection = class(TObjectList<TBook>)
-  public
-    procedure LoadDataSet(BooksDAO: IBooksDAO);
-    function FindByISBN(const isbn: string): TBook;
-  end;
-
-type
-  TBookListKind = (blkAll, blkOnShelf, blkAvaliable);
 
 type
   { TODO 3: Too many responsibilities. Separate GUI from structures }
@@ -40,12 +18,9 @@ type
   // Add new unit: Model.Books.pas
   TBooksListBoxConfigurator = class(TComponent)
   private
-    FAllBooks: TBookCollection;
+    DragedIdx: integer;
     FListBoxOnShelf: TListBox;
     FListBoxAvaliable: TListBox;
-    FBooksOnShelf: TBookCollection;
-    FBooksAvaliable: TBookCollection;
-    DragedIdx: integer;
     procedure EventOnStartDrag(Sender: TObject; var DragObject: TDragObject);
     procedure EventOnDragDrop(Sender, Source: TObject; X, Y: integer);
     procedure EventOnDragOver(Sender, Source: TObject; X, Y: integer;
@@ -55,11 +30,9 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    procedure InsertNewBook(b: TBook);
     { TODO 3: Introduce 3 properties: ListBoxOnShelf, ListBoxAvaliable, Books }
     procedure PrepareListBoxes(lbxOnShelf, lbxAvaliable: TListBox);
-    function GetBookList(kind: TBookListKind): TBookCollection;
-    function FindBook(isbn: string): TBook;
-    procedure InsertNewBook(b: TBook);
   end;
 
 implementation
@@ -69,70 +42,27 @@ uses
   Data.Main;
 
 constructor TBooksListBoxConfigurator.Create(AOwner: TComponent);
-var
-  b: TBook;
-  BooksDAO: IBooksDAO;
 begin
   inherited;
-  // ---------------------------------------------------
-  FAllBooks := TBookCollection.Create();
-  { TODO 3: Discuss how to remove this dependency. Check implentation uses }
-  BooksDAO := GetBooks_FireDAC(DataModMain.mtabBooks);
-  FAllBooks.LoadDataSet(BooksDAO);
-  // ---------------------------------------------------
-  FBooksOnShelf := TBookCollection.Create(false);
-  FBooksAvaliable := TBookCollection.Create(false);
-  for b in FAllBooks do
-  begin
-    if b.status = 'on-shelf' then
-      FBooksOnShelf.Add(b)
-    else if b.status = 'avaliable' then
-      FBooksAvaliable.Add(b)
-  end;
 end;
 
 destructor TBooksListBoxConfigurator.Destroy;
 begin
-  FAllBooks.Free;
-  FBooksOnShelf.Free;
-  FBooksAvaliable.Free;
   inherited;
-end;
-
-function TBooksListBoxConfigurator.GetBookList(kind: TBookListKind)
-  : TBookCollection;
-begin
-  case kind of
-    blkAll:
-      Result := FAllBooks;
-    blkOnShelf:
-      Result := FBooksOnShelf;
-    blkAvaliable:
-      Result := FBooksAvaliable
-  else
-    Result := FAllBooks;
-  end;
 end;
 
 procedure TBooksListBoxConfigurator.InsertNewBook(b: TBook);
 begin
-  FAllBooks.Add(b);
-  if b.status = 'on-shelf' then
-    FBooksOnShelf.Add(b)
-  else if b.status = 'avaliable' then
-    FBooksAvaliable.Add(b);
+  DataModMain.BooksFactory.InsertBook(b);
   FListBoxAvaliable.AddItem(b.title, b);
-end;
-
-function TBooksListBoxConfigurator.FindBook(isbn: string): TBook;
-begin
-  Result := FAllBooks.FindByISBN(isbn);
 end;
 
 procedure TBooksListBoxConfigurator.PrepareListBoxes(lbxOnShelf,
   lbxAvaliable: TListBox);
 var
   b: TBook;
+  BooksOnShelf: TBookCollection;
+  BooksAvaliable: TBookCollection;
 begin
   FListBoxOnShelf := lbxOnShelf;
   FListBoxAvaliable := lbxAvaliable;
@@ -140,7 +70,8 @@ begin
   // New private method: SetupListBox
   // -----------------------------------------------------------------
   // ListBox: books on the shelf
-  for b in FBooksOnShelf do
+  BooksOnShelf := DataModMain.BooksFactory.GetBookList(blkOnShelf);
+  for b in BooksOnShelf do
     FListBoxOnShelf.AddItem(b.title, b);
   FListBoxOnShelf.OnDragDrop := EventOnDragDrop;
   FListBoxOnShelf.OnDragOver := EventOnDragOver;
@@ -151,7 +82,8 @@ begin
   FListBoxOnShelf.ItemHeight := 50;
   // -----------------------------------------------------------------
   // ListBox: books avaliable
-  for b in FBooksAvaliable do
+  BooksAvaliable := DataModMain.BooksFactory.GetBookList(blkAvaliable);
+  for b in BooksAvaliable do
     FListBoxAvaliable.AddItem(b.title, b);
   FListBoxAvaliable.OnDragDrop := EventOnDragDrop;
   FListBoxAvaliable.OnDragOver := EventOnDragOver;
@@ -179,19 +111,24 @@ var
   b: TBook;
   srcList: TBookCollection;
   dstList: TBookCollection;
+  BooksOnShelf: TBookCollection;
+  BooksAvaliable: TBookCollection;
 begin
   lbx1 := Source as TListBox;
   lbx2 := Sender as TListBox;
   b := lbx1.Items.Objects[DragedIdx] as TBook;
+
+  BooksOnShelf := DataModMain.BooksFactory.GetBookList(blkOnShelf);
+  BooksAvaliable := DataModMain.BooksFactory.GetBookList(blkAvaliable);
   if lbx1 = FListBoxOnShelf then
   begin
-    srcList := FBooksOnShelf;
-    dstList := FBooksAvaliable;
+    srcList := BooksOnShelf;
+    dstList := BooksAvaliable;
   end
   else
   begin
-    srcList := FBooksAvaliable;
-    dstList := FBooksOnShelf;
+    srcList := BooksAvaliable;
+    dstList := BooksOnShelf;
   end;
   dstList.Add(srcList.Extract(b));
   lbx1.Items.Delete(DragedIdx);
@@ -264,47 +201,6 @@ begin
   DrawText(ACanvas.Handle, PChar(s), Length(s), r2,
     // DT_LEFT or DT_WORDBREAK or DT_CALCRECT);
     DT_LEFT or DT_WORDBREAK);
-end;
-
-{ TBookCollection }
-
-procedure TBookCollection.LoadDataSet(BooksDAO: IBooksDAO);
-begin
-  BooksDAO.ForEach(
-    procedure(Books: IBooksDAO)
-    begin
-      self.Add(TBook.Create(Books));
-    end);
-end;
-
-function TBookCollection.FindByISBN(const isbn: string): TBook;
-var
-  book: TBook;
-begin
-  for book in self do
-    if book.isbn = isbn then
-    begin
-      Result := book;
-      exit;
-    end;
-  Result := nil;
-end;
-
-{ TBook }
-
-constructor TBook.Create(Books: IBooksDAO);
-begin
-  inherited Create;
-  self.isbn := Books.fldISBN.Value;
-  self.title := Books.fldTitle.Value;
-  self.author := Books.fldAuthors.Value;
-  self.status := Books.fldStatus.Value;
-  self.releseDate := Books.fldReleseDate.Value;
-  self.pages := Books.fldPages.Value;
-  self.price := Books.fldPrice.Value;
-  self.currency := Books.fldCurrency.Value;
-  self.imported := Books.fldImported.Value;
-  self.description := Books.fldDescription.Value;
 end;
 
 end.

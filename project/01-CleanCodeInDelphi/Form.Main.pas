@@ -7,24 +7,11 @@ uses
   Vcl.ExtCtrls, Data.DB,
   ChromeTabs, ChromeTabsClasses, ChromeTabsTypes,
   System.JSON,
+  Messaging.EventBus,
   Fake.FDConnection,
   {TODO 3: [D] Resolve dependency on ExtGUI.ListBox.Books. Too tightly coupled}
   // Dependency is requred by attribute TBooksListBoxConfigurator
   ExtGUI.ListBox.Books;
-
-type
-  TReaderReport = record
-    email: string;
-    firstName: string;
-    lastName: string;
-    company: string;
-    bookISBN: string;
-    bookTitle: string;
-    rating: Integer;
-    oppinion: string;
-    // TODO: Poprawić nazwę pola
-    dtReported: TDateTime;
-  end;
 
 type
   TForm1 = class(TForm)
@@ -55,19 +42,8 @@ type
     procedure InjectBooksDBGrid(aParent: TWinControl);
     // --------------
     function CreateFrameAndAddChromeTab<T: TFrame>(const Caption: String): T;
-    // --------------
-    procedure ImporNewBooksFromOpenAPI;
-    procedure InsertJsonBooksToDataset(jsBooks: TJSONArray; DataSet: TDataSet);
-    // --------------
-    procedure ImportNewReaderReportsFromOpenAPI;
-    procedure ValidateJsonReaderReport(jsRow: TJSONObject);
-    function GetJsonReaderReport(jsReaderReport: TJSONObject): TReaderReport;
-    procedure InsertReaderReportToDatabase(ReaderReport: TReaderReport);
-    procedure LocateBookByISBN(ReaderReport: TReaderReport);
-    function AppendNewReaderIntoDatabase(ReaderReport: TReaderReport): Integer;
-    procedure AppendNewReportIntoDatabase(readerId: Integer;
-      ReaderReport: TReaderReport);
-    // --------------
+    procedure OnUpdateCaption(MessageID: Integer;
+      const AMessagee: TEventMessage);
   public
     FDConnection1: TFDConnectionMock;
   end;
@@ -90,6 +66,7 @@ uses
   Helper.TJSONObject,
   Helper.TWinControl,
   Helper.TApplication,
+  Helper.TDBGrid,
   // ----------------------------------------------------------------------
   Consts.Application,
   Utils.CipherAES128,
@@ -98,7 +75,8 @@ uses
   ClientAPI.Readers,
   ClientAPI.Books,
   Frame.Import,
-  Frame.Welcome, Helper.TDBGrid;
+  Frame.Welcome,
+  Work.ImportReaderReports;
 
 const
   IsInjectBooksDBGridInWelcomeFrame = True;
@@ -110,7 +88,6 @@ const
   SecureKey = 'delphi-is-the-best';
   // SecurePassword = AES 128 ('masterkey',SecureKey)
   SecurePassword = 'hC52IiCv4zYQY2PKLlSvBaOXc14X41Mc1rcVS6kyr3M=';
-  Client_API_Token = '20be805d-9cea27e2-a588efc5-1fceb84d-9fb4b67c';
 
 resourcestring
   SWelcomeScreen = 'Welcome screen';
@@ -134,34 +111,6 @@ begin
   AutoHeightBookListBoxes();
 end;
 
-// ----------------------------------------------------------
-//
-// Function checks is TJsonObject has field and this field has not null value
-//
-
-function BooksToDateTime(const s: string): TDateTime;
-const
-  months: array [1 .. 12] of string = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec');
-var
-  m: string;
-  y: string;
-  i: Integer;
-  mm: Integer;
-  yy: Integer;
-begin
-  m := s.Substring(0, 3);
-  y := s.Substring(4);
-  mm := 0;
-  for i := 1 to 12 do
-    if months[i].ToUpper = m.ToUpper then
-      mm := i;
-  if mm = 0 then
-    raise ERangeError.Create('Incorect mont name in the date: ' + s);
-  yy := y.ToInteger();
-  Result := EncodeDate(yy, mm, 1);
-end;
-
 { TODO 2: Method is too large. Comments is showing separate methods }
 procedure TForm1.btnImportClick(Sender: TObject);
 var
@@ -171,8 +120,7 @@ var
   DBGrid2: TDBGrid;
   DataSrc2: TDataSource;
 begin
-  ImporNewBooksFromOpenAPI;
-  ImportNewReaderReportsFromOpenAPI;
+  TImportReaderReportsWork.Create(Self).Action.Execute;
   // ----------------------------------------------------------
   // ----------------------------------------------------------
   //
@@ -234,8 +182,13 @@ begin
   end;
 end;
 
-procedure TForm1.FormCreate(Sender: TObject);
+procedure TForm1.OnUpdateCaption (MessageID: Integer;
+    const AMessagee: TEventMessage);
+begin
+  Caption := AMessagee.TagString;
+end;
 
+procedure TForm1.FormCreate(Sender: TObject);
 begin
   // ----------------------------------------------------------
   // Check: If we are in developer mode
@@ -244,7 +197,7 @@ begin
   // during test
 
   FIsDeveloperMode := Application.IsDevelopeMode;
-
+  TEventBus._Register(EB_Main_Form_UpdateCaption,OnUpdateCaption);
   pnMain.Caption := '';
 end;
 
@@ -393,179 +346,5 @@ begin
   if FIsDeveloperMode and IsInjectBooksDBGridInWelcomeFrame then
     InjectBooksDBGrid(frm);
 end;
-
-// --------------------------------------------------------------------------
-// --------------------------------------------------------------------------
-//
-// Import new Books data from OpenAPI
-//
-// --------------------------------------------------------------------------
-// --------------------------------------------------------------------------
-
-procedure TForm1.ImporNewBooksFromOpenAPI;
-var
-  jsBooks: TJSONArray;
-begin
-  jsBooks := ImportBooksFromWebService(Client_API_Token);
-  try
-    InsertJsonBooksToDataset(jsBooks, DataModMain.mtabBooks);
-  finally
-    jsBooks.Free;
-  end;
-end;
-
-procedure TForm1.InsertJsonBooksToDataset(jsBooks: TJSONArray;
-  DataSet: TDataSet);
-var
-  jsBook: TJSONObject;
-  TextBookReleseDate: string;
-  b: TBook;
-  b2: TBook;
-  i: Integer;
-begin
-  for i := 0 to jsBooks.Count - 1 do
-  begin
-    jsBook := jsBooks.Items[i] as TJSONObject;
-    b := TBook.Create;
-    b.status := jsBook.Values['status'].Value;
-    b.title := jsBook.Values['title'].Value;
-    b.isbn := jsBook.Values['isbn'].Value;
-    b.author := jsBook.Values['author'].Value;
-    TextBookReleseDate := jsBook.Values['date'].Value;
-    b.releseDate := BooksToDateTime(TextBookReleseDate);
-    b.pages := (jsBook.Values['pages'] as TJSONNumber).AsInt;
-    b.price := StrToCurr(jsBook.Values['price'].Value);
-    b.currency := jsBook.Values['currency'].Value;
-    b.description := jsBook.Values['description'].Value;
-    b.imported := Now;
-    b2 := FBooksConfig.GetBookList(blkAll).FindByISBN(b.isbn);
-    if not Assigned(b2) then
-    begin
-      FBooksConfig.InsertNewBook(b);
-      // ----------------------------------------------------------------
-      // Append report into the database:
-      // Fields: ISBN, Title, Authors, Status, ReleseDate, Pages, Price,
-      // Currency, Imported, Description
-      DataSet.InsertRecord([b.isbn, b.title, b.author, b.status, b.releseDate,
-        b.pages, b.price, b.currency, b.imported, b.description]);
-    end;
-  end;
-end;
-
-// --------------------------------------------------------------------------
-// --------------------------------------------------------------------------
-//
-// Import new Books data from OpenAPI
-//
-// --------------------------------------------------------------------------
-// --------------------------------------------------------------------------
-
-procedure TForm1.ImportNewReaderReportsFromOpenAPI;
-var
-  jsData: TJSONArray;
-  i: Integer;
-  jsReaderReport: TJSONObject;
-  ss: array of string;
-  ReaderReport: TReaderReport;
-begin
-  jsData := ImportReaderReportsFromWebService(Client_API_Token);
-  try
-    for i := 0 to jsData.Count - 1 do
-    begin
-      jsReaderReport := jsData.Items[i] as TJSONObject;
-      ValidateJsonReaderReport(jsReaderReport);
-      ReaderReport := GetJsonReaderReport(jsReaderReport);
-      InsertReaderReportToDatabase(ReaderReport);
-      if FIsDeveloperMode then
-        Insert([ReaderReport.rating.ToString], ss, maxInt);
-    end;
-    if FIsDeveloperMode then
-      Caption := String.Join(' ,', ss);
-  finally
-    jsData.Free;
-  end;
-end;
-
-procedure TForm1.ValidateJsonReaderReport(jsRow: TJSONObject);
-var
-  email: string;
-begin
-  email := jsRow.Values['email'].Value;
-  if not CheckEmail(email) then
-    raise Exception.Create('Invalid email addres');
-  if not jsRow.IsValidIsoDateUtc('created') then
-    raise Exception.Create('Invalid date. Expected ISO format')
-end;
-
-function TForm1.GetJsonReaderReport(jsReaderReport: TJSONObject): TReaderReport;
-begin
-  with Result do
-  begin
-    email := jsReaderReport.GetPairValueAsString('email');
-    firstName := jsReaderReport.GetPairValueAsString('firstName');
-    lastName := jsReaderReport.GetPairValueAsString('lastname');
-    company := jsReaderReport.GetPairValueAsString('company');
-    bookISBN := jsReaderReport.GetPairValueAsString('book-isbn');
-    bookTitle := jsReaderReport.GetPairValueAsString('book-title');
-    rating := jsReaderReport.GetPairValueAsInteger('rating');
-    oppinion := jsReaderReport.GetPairValueAsString('oppinion');
-    dtReported := jsReaderReport.GetPairValueAsUtcDate('created');
-  end;
-end;
-
-procedure TForm1.InsertReaderReportToDatabase(ReaderReport: TReaderReport);
-var
-  VarReaderId: Variant;
-  ReaderId: Integer;
-begin
-  LocateBookByISBN(ReaderReport);
-  VarReaderId := DataModMain.FindReaderByEmil(ReaderReport.email);
-  if VarReaderId = Null then
-    ReaderId := AppendNewReaderIntoDatabase(ReaderReport)
-  else
-    ReaderId := VarReaderId.AsInter;
-  AppendNewReportIntoDatabase(ReaderId, ReaderReport);
-end;
-
-procedure TForm1.LocateBookByISBN(ReaderReport: TReaderReport);
-var
-  b: TBook;
-begin
-  b := FBooksConfig.GetBookList(blkAll).FindByISBN(ReaderReport.bookISBN);
-  if not Assigned(b) then
-    raise Exception.Create('Invalid book isbn');
-end;
-
-function TForm1.AppendNewReaderIntoDatabase(ReaderReport
-  : TReaderReport): Integer;
-var
-  readerId: Integer;
-begin
-  readerId := DataModMain.mtabReaders.GetMaxValue('ReaderId') + 1;
-  //
-  // Fields: ReaderId, FirstName, LastName, Email, Company, BooksRead,
-  // LastReport, ReadersCreated
-  //
-  DataModMain.mtabReaders.AppendRecord([readerId, ReaderReport.firstName,
-    ReaderReport.lastName, ReaderReport.email, ReaderReport.company, 1,
-    ReaderReport.dtReported, Now]);
-  Result := readerId;
-end;
-
-procedure TForm1.AppendNewReportIntoDatabase(readerId: Integer;
-  ReaderReport: TReaderReport);
-begin
-  // ----------------------------------------------------------------
-  //
-  // Append report into the database:
-  // Fields: ReaderId, ISBN, Rating, Oppinion, Reported
-  //
-  DataModMain.mtabReports.AppendRecord([readerId, ReaderReport.bookISBN,
-    ReaderReport.rating, ReaderReport.oppinion, ReaderReport.dtReported]);
-end;
-
-
-// --------------------------------------------------------------------------
-// --------------------------------------------------------------------------
 
 end.
