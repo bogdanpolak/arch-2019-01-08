@@ -12,6 +12,7 @@ uses
 type
   TNotShippedOrders = record
     FOrdes: array of String;
+    function ToString: String;
   end;
 
 type
@@ -31,7 +32,7 @@ type
 implementation
 
 uses
-  System.Messaging;
+  Messaging.EventBus;
 
 { TMessagingWork }
 
@@ -69,10 +70,25 @@ begin
   Result := True;
 end;
 
+{ TNotShippedOrders }
+
+function TNotShippedOrders.ToString: String;
+var
+  S: String;
+begin
+  Result := '';
+  for S in FOrdes do
+  begin
+    Result := Result + ', ' + S;
+  end;
+end;
+
+
 procedure TMessagingWork.WorkerTimerEvent(Sender: TObject);
 var
   isFoundNotShipped: boolean;
   StrOrderId: string;
+  AMessage: TEventMessage;
 begin
   isFoundNotShipped := FOrdersModule.LocateNearestNotShippedOrder();
   if isFoundNotShipped then
@@ -86,8 +102,8 @@ begin
   begin
     FWorkerTimer.Enabled := False;
     Caption := 'Done';
-    System.Messaging.TMessageManager.DefaultManager.SendMessage(Self,
-      TMessage<TNotShippedOrders>.Create(Data));
+    AMessage.TagString := Data.ToString;
+    TEventBus._Post(1,AMessage);
   end;
 end;
 

@@ -6,16 +6,17 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, System.Actions, Vcl.ActnList,
   Vcl.DBActns, Vcl.StdCtrls,
-  MVC.Work,
-  System.Messaging;
+  Messaging.EventBus,
+  MVC.Work;
 
 type
   TForm1 = class(TForm)
     GroupBox1: TGroupBox;
     procedure FormCreate(Sender: TObject);
   private
-    procedure OnWork2Notify(const Sender: TObject; const M: System.Messaging.TMessage);
     function AddButtonToContainer<T: TWork>(Container: TWinControl): TButton;
+    procedure OnWork2Finished(MessageID: Integer;
+      const AMessagee: TEventMessage);
     { Private declarations }
   public
     { Public declarations }
@@ -49,35 +50,19 @@ begin
 end;
 
 
-
-function StingArrayToString (const aStrings: array of string): string;
-var
-  S: String;
+procedure TForm1.OnWork2Finished (MessageID: Integer;
+    const AMessagee: TEventMessage);
 begin
-  Result := '';
-  for S in aStrings do
-  begin
-    Result := Result + ', ' + S;
-  end;
-end;
-
-procedure TForm1.OnWork2Notify (const Sender: TObject; const M: TMessage);
-var
-  NotShipped: TNotShippedOrders;
-begin
-  NotShipped := (M as TMessage<TNotShippedOrders>).Value;
-  Caption := StingArrayToString(NotShipped.FOrdes);
+  Caption := AMessagee.TagString;
 end;
 
 procedure TForm1.FormCreate(Sender: TObject);
 var
   myWork: TWork;
 begin
+  TEventBus._Register(1,OnWork2Finished);
   AddButtonToContainer<TCommandOneWork>(GroupBox1);
   AddButtonToContainer<TMessagingWork>(GroupBox1);
-  // -----
-  TMessageManager.DefaultManager.SubscribeToMessage(
-    TMessage<TNotShippedOrders>,OnWork2Notify );
 end;
 
 end.

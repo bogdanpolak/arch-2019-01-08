@@ -6,7 +6,8 @@ uses
   MVC.Work in 'MVC.Work.pas',
   Work.CommandOne in 'Work.CommandOne.pas',
   Work.Messaging in 'Work.Messaging.pas',
-  Module.MessagingWork in 'Module.MessagingWork.pas' {ModuleOrders: TDataModule};
+  Module.MessagingWork in 'Module.MessagingWork.pas' {ModuleOrders: TDataModule},
+  Messaging.EventBus in 'Messaging.EventBus.pas';
 
 {$R *.res}
 
