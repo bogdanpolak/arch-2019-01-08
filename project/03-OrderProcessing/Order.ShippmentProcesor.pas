@@ -3,45 +3,49 @@ unit Order.ShippmentProcesor;
 interface
 
 uses
+  System.Classes,
+  Data.DB,
   Shippment,
   DataProxy.Order,
   Order.Validator;
 
 type
-  TShipmentProcessor = class
+  TShipmentProcessor = class(TComponent)
   private
-    FShippment: TShippment;
-    FOrder: TOrderDAO;
-    FOrderValidator: TOrderValidator;
   public
-    constructor Create(aShippment: TShippment);
-    destructor Destroy; override;
-    procedure ShipCurrentOrder;
-
+    procedure ShipOrder (Shippment: TShippment);
   end;
 
 implementation
 
-constructor TShipmentProcessor.Create(aShippment: TShippment);
-begin
-  FShippment := aShippment;
-  FOrder := TOrderDao.Create(nil);
-  FOrderValidator := TOrderValidator.Create;
-end;
+uses DataProxy.OrderDetails, Data.DataProxy, DataProxy.Factory;
 
-destructor TShipmentProcessor.Destroy;
+procedure TShipmentProcessor.ShipOrder (Shippment: TShippment);
+var
+  isValid: Boolean;
+  OrderDetails: TOrderDetailsProxy;
+  Order: TOrderProxy;
+  OrderValidator: TOrderValidator;
+  TotalQuantity: Integer;
 begin
-  FOrder.Free;
-  FOrderValidator.Free;
-  inherited;
-end;
-
-procedure TShipmentProcessor.ShipCurrentOrder;
-begin
-  FOrder.Open(FShippment.OrderID);
-  FOrderValidator.isValid(FOrder);
-  // if isValid then
-  // FOrder.Post;
+  OrderValidator := TOrderValidator.Create;
+  try
+    Order := DataProxyFactory.GetDataProxy_Order1(Shippment.OrderID);
+    Order.Open;
+    OrderDetails := DataProxyFactory.GetDataProxy_OrderDetails(Shippment.OrderID);
+    OrderDetails.Open;
+    TotalQuantity := OrderDetails.GetTotalQuantity;
+    WriteLn ( ' TotalQuantity: ', TotalQuantity);
+    Order.Edit;
+    Order.ShippedDate.Value := Shippment.ShipmentDate;
+    Order.ShipVia.Value := Shippment.ShipperID;
+    isValid := OrderValidator.isValid(Order);
+    if isValid then
+      Order.Post;
+    Order.Free;
+  finally
+    OrderValidator.Free;
+  end;
 {$IFDEF CONSOLEAPP}
   WriteLn('Order has been processed....');
 {$ENDIF}

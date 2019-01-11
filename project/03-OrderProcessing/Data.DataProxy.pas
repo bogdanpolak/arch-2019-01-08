@@ -17,6 +17,8 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     // -------------
+    procedure ConnectWithDataSet(aDataSet: TDataSet);
+    // -------------
     procedure Append; inline;
     procedure Cancel; inline;
     procedure Close; inline;
@@ -36,7 +38,7 @@ type
     function Lookup(const KeyFields: string; const KeyValues: Variant;
       const ResultFields: string): Variant;
     procedure Next; inline;
-    procedure Open; inline;
+    procedure Open;
     procedure Post; inline;
     procedure Prior; inline;
     procedure Refresh; inline;
@@ -44,7 +46,7 @@ type
   end;
 
   TDatasetProxy = class(TGenericDataSetProxy)
-    procedure ForEach(OnElem: TProc<TGenericDataSetProxy>);
+    procedure ForEach(OnElem: TProc<TDatasetProxy>);
   end;
 
 implementation
@@ -66,6 +68,11 @@ end;
 procedure TGenericDataSetProxy.Close;
 begin
   FDataSet.Close;
+end;
+
+procedure TGenericDataSetProxy.ConnectWithDataSet(aDataSet: TDataSet);
+begin
+  FDataSet := aDataSet;
 end;
 
 function TGenericDataSetProxy.ControlsDisabled: Boolean;
@@ -156,6 +163,7 @@ end;
 procedure TGenericDataSetProxy.Open;
 begin
   FDataSet.Open;
+  ConnectFields;
 end;
 
 procedure TGenericDataSetProxy.Post;
@@ -180,7 +188,7 @@ end;
 
 { TItarableDataObject }
 
-procedure TDatasetProxy.ForEach(OnElem: TProc<TGenericDataSetProxy>);
+procedure TDatasetProxy.ForEach(OnElem: TProc<TDatasetProxy>);
 begin
   // TODO: Wyci¹gnij kod z helper-a (reu¿ywalnoœæ vs wydajnoœæ)
   FDataSet.WhileNotEof(

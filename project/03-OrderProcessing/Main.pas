@@ -12,18 +12,23 @@ uses
   DataProxy.Order,
   Order.ShippmentProcesor,
   Database.Connector,
-  Database.Connector.Interbase;
+  Database.Connector.Interbase,
+  DataProxy.Factory;
 
 procedure MainProc;
 var
   Shippment: TShippment;
   processor: TShipmentProcessor;
+  DataProxyFactory: TDataProxyFactory;
 begin
-  Shippment := TShippment.Create(11077, Int(Now()), 3);
+  DataProxyFactory := TDataProxyFactory.Create(nil);
   GlobalConnector := TInterbaseDatabaseConnector.Create;
-  processor := TShipmentProcessor.Create(Shippment);
+  processor := TShipmentProcessor.Create(nil);
   try
-    processor.ShipCurrentOrder;
+    Shippment.OrderID := 11077;
+    Shippment.ShipmentDate := Int(Now());
+    Shippment.ShipperID := 3;
+    processor.ShipOrder(Shippment);
     WriteLn('Order successfully processed....');
   finally
     processor.Free;

@@ -8,7 +8,7 @@ uses
 type
 
   TOrderValidator = class
-    function IsValid(aOrder: TOrderDao): Boolean;
+    function IsValid(aOrder: TOrderProxy): Boolean;
   end;
 
 implementation
@@ -16,7 +16,7 @@ implementation
 uses
   System.Variants;
 
-function TOrderValidator.IsValid(aOrder: TOrderDao): Boolean;
+function TOrderValidator.IsValid(aOrder: TOrderProxy): Boolean;
 var
   valid: Boolean;
 begin

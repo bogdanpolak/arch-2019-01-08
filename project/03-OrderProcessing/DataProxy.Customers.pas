@@ -4,12 +4,7 @@ interface
 
 uses
   Data.DB,
-  Data.DataProxy,
-  // FireDAC - TFDQuery ------------------------------
-  FireDAC.Comp.Client,
-  FireDAC.DApt,
-  FireDAC.Stan.Param,
-  FireDAC.Stan.Async;
+  Data.DataProxy;
 
 type
   TCustomersProxy = class(TDatasetProxy)
@@ -27,8 +22,6 @@ type
     Country: TWideStringField;
     Phone: TWideStringField;
     Fax: TWideStringField;
-    procedure Open(OrderID: integer);
-    procedure Close;
     // property DataSet: TDataSet read FDataSet;
   end;
 
@@ -39,16 +32,6 @@ implementation
 uses
   System.SysUtils,
   Database.Connector;
-
-const
-  SQL_SELECT = 'SELECT CUSTOMERID, COMPANYNAME, CONTACTNAME, ' +
-    ' CONTACTTITLE, ADDRESS, CITY, REGION, POSTALCODE, COUNTRY PHONE, FAX' +
-    ' FROM {id Customers} ';
-
-procedure TCustomersProxy.Close;
-begin
-
-end;
 
 procedure TCustomersProxy.ConnectFields;
 begin
@@ -63,20 +46,6 @@ begin
   Country := FDataSet.FieldByName('Country') as TWideStringField;
   Phone := FDataSet.FieldByName('Phone') as TWideStringField;
   Fax := FDataSet.FieldByName('Fax') as TWideStringField;
-end;
-
-procedure TCustomersProxy.Open(OrderID: integer);
-var
-  fdq: TFDQuery;
-begin
-  if not Assigned(FDataSet) then
-    raise Exception.Create('The DataSet is required');
-  fdq := TFDQuery.Create(nil);
-  fdq.SQL.Text := SQL_SELECT;
-  fdq.Connection := GlobalConnector.GetMainConnection;
-  FDataSet := fdq;
-  FDataSet.Open;
-  ConnectFields;
 end;
 
 end.
