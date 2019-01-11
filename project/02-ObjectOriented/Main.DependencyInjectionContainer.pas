@@ -7,6 +7,7 @@ procedure Execute_DependencyInjectionContainerDemo;
 implementation
 
 uses
+  System.Classes,
   System.TypInfo,
   System.SysUtils,
   RTTI;
@@ -109,6 +110,7 @@ begin
       begin
         CreateMethod := rttiType.GetMethod('Create');
         Value := CreateMethod.Invoke(FClass, []);
+        // opis kodu poni¿ej: Result := Value.AsInterface as T;
         System.SysUtils.Supports(Value.AsInterface, data.Guid, Result);
       end;
     end
