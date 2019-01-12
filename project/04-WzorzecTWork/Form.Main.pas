@@ -3,11 +3,12 @@ unit Form.Main;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, System.Actions, Vcl.ActnList,
+  Winapi.Windows, Winapi.Messages,
+  System.SysUtils, System.Variants, System.Classes, System.Actions,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ActnList,
   Vcl.DBActns, Vcl.StdCtrls,
-  Messaging.EventBus,
-  MVC.Work;
+  Pattern.EventBus,
+  Pattern.Work;
 
 type
   TForm1 = class(TForm)
