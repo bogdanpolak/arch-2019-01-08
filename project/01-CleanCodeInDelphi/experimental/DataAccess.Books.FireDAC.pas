@@ -9,30 +9,30 @@ uses
 type
   TFDBooksDAO = class(TBaseDAO, IBooksDAO)
   strict private
-    FFieldISBN: TStringField;
-    FFieldTitle: TStringField;
+    FFieldISBN: TWideStringField;
+    FFieldTitle: TWideStringField;
     FFieldAuthors: TStringField;
-    FFieldStatus: TStringField;
+    FFieldStatus: TWideStringField;
     FFieldReleseDate: TDateField;
     FFieldPages: TIntegerField;
     FFieldPrice: TBCDField;
-    FFieldCurrency: TStringField;
+    FFieldCurrency: TWideStringField;
     FFieldImported: TDateTimeField;
-    FFieldDescription: TStringField;
+    FFieldDescription: TWideStringField;
   strict protected
     procedure BindDataSetFields(); override;
   public
     constructor Create(DataSet: TFDDataSet);
-    function fldISBN: TStringField;
-    function fldTitle: TStringField;
-    function fldAuthors: TStringField;
-    function fldStatus: TStringField;
+    function fldISBN: TWideStringField;
+    function fldTitle: TWideStringField;
+    function fldAuthors: TWideStringField;
+    function fldStatus: TWideStringField;
     function fldReleseDate: TDateField;
     function fldPages: TIntegerField;
     function fldPrice: TBCDField;
-    function fldCurrency: TStringField;
+    function fldCurrency: TWideStringField;
     function fldImported: TDateTimeField;
-    function fldDescription: TStringField;
+    function fldDescription: TWideStringField;
     procedure ForEach(proc: TProc<IBooksDAO>);
   end;
 
@@ -44,16 +44,16 @@ procedure TFDBooksDAO.BindDataSetFields;
 begin
   if Assigned(FDataSet) and FDataSet.Active then
   begin
-    FFieldISBN := FDataSet.FieldByName('ISBN') as TStringField;
-    FFieldTitle := FDataSet.FieldByName('Title') as TStringField;
-    FFieldAuthors := FDataSet.FieldByName('Authors') as TStringField;
-    FFieldStatus := FDataSet.FieldByName('Status') as TStringField;
+    FFieldISBN := FDataSet.FieldByName('ISBN') as TWideStringField;
+    FFieldTitle := FDataSet.FieldByName('Title') as TWideStringField;
+    FFieldAuthors := FDataSet.FieldByName('Authors') as TWideStringField;
+    FFieldStatus := FDataSet.FieldByName('Status') as TWideStringField;
     FFieldReleseDate := FDataSet.FieldByName('ReleseDate') as  TDateField;
     FFieldPages := FDataSet.FieldByName('Pages') as TIntegerField;
     FFieldPrice := FDataSet.FieldByName('Price') as TBCDField;
-    FFieldCurrency := FDataSet.FieldByName('Currency') as TStringField;
+    FFieldCurrency := FDataSet.FieldByName('Currency') as TWideStringField;
     FFieldImported := FDataSet.FieldByName('Imported') as TDateTimeField;
-    FFieldDescription := FDataSet.FieldByName('Description') as TStringField;
+    FFieldDescription := FDataSet.FieldByName('Description') as TWideStringField;
   end
   else
     raise Exception.Create('Error Message');
@@ -66,17 +66,17 @@ begin
 end;
 
 
-function TFDBooksDAO.fldAuthors: TStringField;
+function TFDBooksDAO.fldAuthors: TWideStringField;
 begin
   Result := FFieldISBN;
 end;
 
-function TFDBooksDAO.fldCurrency: TStringField;
+function TFDBooksDAO.fldCurrency: TWideStringField;
 begin
   Result := FFieldCurrency
 end;
 
-function TFDBooksDAO.fldDescription: TStringField;
+function TFDBooksDAO.fldDescription: TWideStringField;
 begin
   Result := FFieldDescription
 end;
@@ -86,7 +86,7 @@ begin
   Result := FFieldImported;
 end;
 
-function TFDBooksDAO.fldISBN: TStringField;
+function TFDBooksDAO.fldISBN: TWideStringField;
 begin
   Result := FFieldISBN;
 end;
@@ -106,12 +106,12 @@ begin
   Result := FFieldReleseDate;
 end;
 
-function TFDBooksDAO.fldStatus: TStringField;
+function TFDBooksDAO.fldStatus: TWideStringField;
 begin
   Result := FFieldStatus;
 end;
 
-function TFDBooksDAO.fldTitle: TStringField;
+function TFDBooksDAO.fldTitle: TWideStringField;
 begin
   Result := FFieldTitle;
 end;

@@ -8,16 +8,16 @@ uses
 type
   IBooksDAO = interface(IInterface)
     ['{F8482010-9FCB-4994-B7E9-47F1DB115075}']
-    function fldISBN: TStringField;
-    function fldTitle: TStringField;
-    function fldAuthors: TStringField;
-    function fldStatus: TStringField;
+    function fldISBN: TWideStringField;
+    function fldTitle: TWideStringField;
+    function fldAuthors: TWideStringField;
+    function fldStatus: TWideStringField;
     function fldReleseDate: TDateField;
     function fldPages: TIntegerField;
     function fldPrice: TBCDField;
-    function fldCurrency: TStringField;
+    function fldCurrency: TWideStringField;
     function fldImported: TDateTimeField;
-    function fldDescription: TStringField;
+    function fldDescription: TWideStringField;
     procedure ForEach(proc: TProc<IBooksDAO>);
   end;
 
