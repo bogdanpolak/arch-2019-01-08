@@ -18,12 +18,9 @@ type
     Bevel1: TBevel;
     procedure tmrFrameReadyTimer(Sender: TObject);
   private
-    MessageManager: TMessages;
     { Private declarations }
     procedure OnMessage(var Msg: TMessage); message WM_FRAME_MESSAGE;
   public
-    constructor Create(AOwner: TComponent); override;
-    destructor Destroy; override;
     procedure AddInfo(level: integer; const Msg: string; show: boolean);
   end;
 
@@ -33,32 +30,13 @@ implementation
 
 uses
   System.Contnrs,
-  Consts.Application;
+  Consts.Application, Data.Main;
 
 procedure TFrameWelcome.AddInfo(level: integer; const Msg: string;
   show: boolean);
-var
-  obj: TMyMessage;
 begin
-  obj := TMyMessage.Create;
-  obj.Text := Msg;
-  obj.TagInteger := level;
-  obj.TagBoolean := show;
-  MessageManager.Add(obj);
-  MessageManager.ProcessMessages;
-end;
-
-constructor TFrameWelcome.Create(AOwner: TComponent);
-begin
-  inherited;
-  MessageManager := TMessages.Create;
-  MessageManager.RegisterListener(self);
-end;
-
-destructor TFrameWelcome.Destroy;
-begin
-  inherited;
-  MessageManager.Free;
+  // TODO 3: Remove dependency on DataModMain
+  DataModMain.PostWelcomeFrameInfo(level,Msg,show);
 end;
 
 procedure TFrameWelcome.OnMessage(var Msg: TMessage);

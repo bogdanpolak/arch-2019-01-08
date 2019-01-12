@@ -24,16 +24,16 @@ var
   Books: IBooksDAO;
   s: string;
 begin
-  Books := GetBooks_FireDAC(DataModMain.mtabBooks);
+  Books := GetBooks_FireDAC(DataModMain.dsBooks);
   s := '';
   Books.ForEach(
     procedure(row: IBooksDAO)
     begin
-      if not row.fldTitle.Value.Trim.IsEmpty then
+      if not row.fldTitle.AsString.Trim.IsEmpty then
         if s.IsEmpty then
-          s := row.fldTitle.Value
+          s := row.fldTitle.AsString
         else
-          s := s + TEXT_SPERATOR + row.fldTitle.Value;
+          s := s + TEXT_SPERATOR + row.fldTitle.AsString;
     end);
   Result := s;
 end;

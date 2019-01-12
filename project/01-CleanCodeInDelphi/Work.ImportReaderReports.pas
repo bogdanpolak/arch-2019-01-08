@@ -89,7 +89,7 @@ var
 begin
   jsBooks := ImportBooksFromWebService(Client_API_Token);
   try
-    InsertJsonBooksToDataset(jsBooks, DataModMain.mtabBooks);
+    InsertJsonBooksToDataset(jsBooks, DataModMain.dsBooks);
   finally
     jsBooks.Free;
   end;
@@ -103,7 +103,6 @@ var
   b: TBook;
   b2: TBook;
   i: Integer;
-  AMessage: TEventMessage;
 begin
   for i := 0 to jsBooks.Count - 1 do
   begin
@@ -227,12 +226,12 @@ function TImportReaderReportsWork.AppendNewReaderIntoDatabase
 var
   readerId: Integer;
 begin
-  readerId := DataModMain.mtabReaders.GetMaxValue('ReaderId') + 1;
+  readerId := DataModMain.dsReaders.GetMaxValue('ReaderId') + 1;
   //
   // Fields: ReaderId, FirstName, LastName, Email, Company, BooksRead,
   // LastReport, ReadersCreated
   //
-  DataModMain.mtabReaders.AppendRecord([readerId, ReaderReport.firstName,
+  DataModMain.dsReaders.AppendRecord([readerId, ReaderReport.firstName,
     ReaderReport.lastName, ReaderReport.email, ReaderReport.company, 1,
     ReaderReport.dtReported, Now]);
   Result := readerId;
@@ -246,7 +245,7 @@ begin
   // Append report into the database:
   // Fields: ReaderId, ISBN, Rating, Oppinion, Reported
   //
-  DataModMain.mtabReports.AppendRecord([readerId, ReaderReport.bookISBN,
+  DataModMain.dsReports.AppendRecord([readerId, ReaderReport.bookISBN,
     ReaderReport.rating, ReaderReport.oppinion, ReaderReport.dtReported]);
 end;
 
@@ -259,6 +258,7 @@ begin
   inherited;
   ImportNewBooksFromOpenAPI;
   ImportNewReaderReportsFromOpenAPI;
+  Result := True;
 end;
 
 end.

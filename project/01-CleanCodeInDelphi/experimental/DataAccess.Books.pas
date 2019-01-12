@@ -14,9 +14,9 @@ type
     function fldStatus: TWideStringField;
     function fldReleseDate: TDateField;
     function fldPages: TIntegerField;
-    function fldPrice: TCurrencyField;
+    function fldPrice: TBCDField;
     function fldCurrency: TWideStringField;
-    function fldImported: TDateField;
+    function fldImported: TDateTimeField;
     function fldDescription: TWideStringField;
     procedure ForEach(proc: TProc<IBooksDAO>);
   end;

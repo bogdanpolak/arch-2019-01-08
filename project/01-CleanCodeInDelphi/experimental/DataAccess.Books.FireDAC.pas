@@ -11,13 +11,13 @@ type
   strict private
     FFieldISBN: TWideStringField;
     FFieldTitle: TWideStringField;
-    FFieldAuthors: TWideStringField;
+    FFieldAuthors: TStringField;
     FFieldStatus: TWideStringField;
     FFieldReleseDate: TDateField;
     FFieldPages: TIntegerField;
-    FFieldPrice: TCurrencyField;
+    FFieldPrice: TBCDField;
     FFieldCurrency: TWideStringField;
-    FFieldImported: TDateField;
+    FFieldImported: TDateTimeField;
     FFieldDescription: TWideStringField;
   strict protected
     procedure BindDataSetFields(); override;
@@ -29,9 +29,9 @@ type
     function fldStatus: TWideStringField;
     function fldReleseDate: TDateField;
     function fldPages: TIntegerField;
-    function fldPrice: TCurrencyField;
+    function fldPrice: TBCDField;
     function fldCurrency: TWideStringField;
-    function fldImported: TDateField;
+    function fldImported: TDateTimeField;
     function fldDescription: TWideStringField;
     procedure ForEach(proc: TProc<IBooksDAO>);
   end;
@@ -50,9 +50,9 @@ begin
     FFieldStatus := FDataSet.FieldByName('Status') as TWideStringField;
     FFieldReleseDate := FDataSet.FieldByName('ReleseDate') as  TDateField;
     FFieldPages := FDataSet.FieldByName('Pages') as TIntegerField;
-    FFieldPrice := FDataSet.FieldByName('Price') as TCurrencyField;
+    FFieldPrice := FDataSet.FieldByName('Price') as TBCDField;
     FFieldCurrency := FDataSet.FieldByName('Currency') as TWideStringField;
-    FFieldImported := FDataSet.FieldByName('Imported') as TDateField;
+    FFieldImported := FDataSet.FieldByName('Imported') as TDateTimeField;
     FFieldDescription := FDataSet.FieldByName('Description') as TWideStringField;
   end
   else
@@ -81,7 +81,7 @@ begin
   Result := FFieldDescription
 end;
 
-function TFDBooksDAO.fldImported: TDateField;
+function TFDBooksDAO.fldImported: TDateTimeField;
 begin
   Result := FFieldImported;
 end;
@@ -96,7 +96,7 @@ begin
   Result := FFieldPages;
 end;
 
-function TFDBooksDAO.fldPrice: TCurrencyField;
+function TFDBooksDAO.fldPrice: TBCDField;
 begin
   Result := FFieldPrice;
 end;

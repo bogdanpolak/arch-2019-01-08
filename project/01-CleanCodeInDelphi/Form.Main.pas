@@ -8,7 +8,6 @@ uses
   ChromeTabs, ChromeTabsClasses, ChromeTabsTypes,
   System.JSON,
   Messaging.EventBus,
-  Fake.FDConnection,
   {TODO 3: [D] Resolve dependency on ExtGUI.ListBox.Books. Too tightly coupled}
   // Dependency is requred by attribute TBooksListBoxConfigurator
   ExtGUI.ListBox.Books;
@@ -44,8 +43,6 @@ type
     function CreateFrameAndAddChromeTab<T: TFrame>(const Caption: String): T;
     procedure OnUpdateCaption(MessageID: Integer;
       const AMessagee: TEventMessage);
-  public
-    FDConnection1: TFDConnectionMock;
   end;
 
 var
@@ -81,30 +78,8 @@ uses
 const
   IsInjectBooksDBGridInWelcomeFrame = True;
 
-const
-  SQL_SelectDatabaseVersion = 'SELECT versionnr FROM DBInfo';
-
-const
-  SecureKey = 'delphi-is-the-best';
-  // SecurePassword = AES 128 ('masterkey',SecureKey)
-  SecurePassword = 'hC52IiCv4zYQY2PKLlSvBaOXc14X41Mc1rcVS6kyr3M=';
-
 resourcestring
   SWelcomeScreen = 'Welcome screen';
-  SDBServerGone = 'Database server is gone';
-  SDBConnectionUserPwdInvalid = 'Invalid database configuration.' +
-    ' Application database user or password is incorrect.';
-  SDBConnectionError = 'Can''t connect to database server. Unknown error.';
-  SDBRequireCreate = 'Database is empty. You need to execute script' +
-    ' creating required data.';
-  SDBErrorSelect = 'Can''t execute SELECT command on the database';
-  StrNotSupportedDBVersion = 'Not supported database version. Please' +
-    ' update database structures.';
-
-function DBVersionToString(VerDB: Integer): string;
-begin
-  Result := (VerDB div 1000).ToString + '.' + (VerDB mod 1000).ToString;
-end;
 
 procedure TForm1.FormResize(Sender: TObject);
 begin
@@ -134,7 +109,7 @@ begin
   DBGrid1.Parent := frm;
   DBGrid1.Align := alClient;
   DBGrid1.DataSource := DataSrc1;
-  DataSrc1.DataSet := DataModMain.mtabReaders;
+  DataSrc1.DataSet := DataModMain.dsReaders;
   DBGrid1.AutoResizeAllColumnsWidth();
   // ----------------------------------------------------------
   // ----------------------------------------------------------
@@ -152,7 +127,7 @@ begin
   DBGrid2.Align := alBottom;
   DBGrid2.Height := frm.Height div 3;
   DBGrid2.DataSource := DataSrc2;
-  DataSrc2.DataSet := DataModMain.mtabReports;
+  DataSrc2.DataSet := DataModMain.dsReports;
   DBGrid2.Margins.Top := 0;
   DBGrid2.AutoResizeAllColumnsWidth();
 end;
@@ -239,7 +214,7 @@ begin
     DataGrid.Parent := aParent;
     DataGrid.Align := alClient;
     DataGrid.DataSource := datasrc;
-    datasrc.DataSet := DataModMain.mtabBooks;
+    datasrc.DataSet := DataModMain.dsBooks;
     DataGrid.AutoResizeAllColumnsWidth();
   end;
 end;
@@ -267,84 +242,35 @@ end;
 procedure TForm1.tmrAppReadyTimer(Sender: TObject);
 var
   frm: TFrameWelcome;
-  VersionNr: Integer;
-  msg1: string;
-  UserName: string;
-  password: string;
-  res: Variant;
 begin
   tmrAppReady.Enabled := False;
   if FIsDeveloperMode then
     ReportMemoryLeaksOnShutdown := True;
-
   frm := CreateFrameAndAddChromeTab<TFrameWelcome>('Welcome');
-  // ----------------------------------------------------------
-  // ----------------------------------------------------------
-  //
-  // Connect to database server
-  // Check application user and database structure (DB version)
-  //
-  try
-    UserName := FDManager.ConnectionDefs.ConnectionDefByName
-      (FDConnection1.ConnectionDefName).Params.UserName;
-    password := AES128_Decrypt(SecurePassword, SecureKey);
-    FDConnection1.Open(UserName, password);
-  except
-    on E: EFDDBEngineException do
-    begin
-      case E.kind of
-        ekUserPwdInvalid:
-          msg1 := SDBConnectionUserPwdInvalid;
-        ekServerGone:
-          msg1 := SDBServerGone;
-      else
-        msg1 := SDBConnectionError
-      end;
-      frm.AddInfo(0, msg1, True);
-      frm.AddInfo(1, E.Message, False);
-      exit;
-    end;
-  end;
-  try
-    res := FDConnection1.ExecSQLScalar(SQL_SelectDatabaseVersion);
-  except
-    on E: EFDDBEngineException do
-    begin
-      msg1 := IfThen(E.kind = ekObjNotExists, SDBRequireCreate, SDBErrorSelect);
-      frm.AddInfo(0, msg1, True);
-      frm.AddInfo(1, E.Message, False);
-      exit;
-    end;
-  end;
-  VersionNr := res;
-  if VersionNr <> ExpectedDatabaseVersionNr then
+  // TODO 3: use EventBus instead
+  DataModMain.MessageManager.RegisterListener(frm);
+  if DataModMain.ConnectToDatabaseServer then
   begin
-    frm.AddInfo(0, StrNotSupportedDBVersion, True);
-    frm.AddInfo(1, 'Oczekiwana wersja bazy: ' +
-      DBVersionToString(ExpectedDatabaseVersionNr), True);
-    frm.AddInfo(1, 'Aktualna wersja bazy: ' + DBVersionToString
-      (VersionNr), True);
+    DataModMain.CheckDatabaseStructureVersion;
+    // TODO 3: Check (authenticate) application user before
+    DataModMain.OpenDataSets;
+    // ----------------------------------------------------------
+    // ----------------------------------------------------------
+    //
+    // * Initialize ListBox'es for books
+    // * Load books form database
+    // * Setup drag&drop functionality for two list boxes
+    // * Setup OwnerDraw mode
+    //
+    FBooksConfig := TBooksListBoxConfigurator.Create(self);
+    FBooksConfig.PrepareListBoxes(lbxBooksReaded, lbxBooksAvaliable2);
+    // ----------------------------------------------------------
+    // ----------------------------`------------------------------
+    //
+    // Create Books Grid for Quality Tests
+    if FIsDeveloperMode and IsInjectBooksDBGridInWelcomeFrame then
+      InjectBooksDBGrid(frm);
   end;
-  // ----------------------------------------------------------
-  // ----------------------------------------------------------
-  //
-  DataModMain.OpenDataSets;
-  // ----------------------------------------------------------
-  // ----------------------------------------------------------
-  //
-  // * Initialize ListBox'es for books
-  // * Load books form database
-  // * Setup drag&drop functionality for two list boxes
-  // * Setup OwnerDraw mode
-  //
-  FBooksConfig := TBooksListBoxConfigurator.Create(self);
-  FBooksConfig.PrepareListBoxes(lbxBooksReaded, lbxBooksAvaliable2);
-  // ----------------------------------------------------------
-  // ----------------------------`------------------------------
-  //
-  // Create Books Grid for Quality Tests
-  if FIsDeveloperMode and IsInjectBooksDBGridInWelcomeFrame then
-    InjectBooksDBGrid(frm);
 end;
 
 end.
