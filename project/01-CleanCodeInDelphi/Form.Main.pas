@@ -134,7 +134,7 @@ begin
   DBGrid1.Parent := frm;
   DBGrid1.Align := alClient;
   DBGrid1.DataSource := DataSrc1;
-  DataSrc1.DataSet := DataModMain.mtabReaders;
+  DataSrc1.DataSet := DataModMain.dsReaders;
   DBGrid1.AutoResizeAllColumnsWidth();
   // ----------------------------------------------------------
   // ----------------------------------------------------------
@@ -239,7 +239,7 @@ begin
     DataGrid.Parent := aParent;
     DataGrid.Align := alClient;
     DataGrid.DataSource := datasrc;
-    datasrc.DataSet := DataModMain.mtabBooks;
+    datasrc.DataSet := DataModMain.dsBooks;
     DataGrid.AutoResizeAllColumnsWidth();
   end;
 end;

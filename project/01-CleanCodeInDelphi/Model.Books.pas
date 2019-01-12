@@ -37,7 +37,7 @@ type
     FBooksOnShelf: TBookCollection;
     FBooksAvaliable: TBookCollection;
   public
-    constructor Create(AOwner: TComponent);
+    constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     function FindBook(isbn: string): TBook;
     function GetBookList(kind: TBookListKind): TBookCollection;
@@ -77,16 +77,16 @@ end;
 constructor TBook.Create(Books: IBooksDAO);
 begin
   inherited Create;
-  self.isbn := Books.fldISBN.Value;
-  self.title := Books.fldTitle.Value;
-  self.author := Books.fldAuthors.Value;
-  self.status := Books.fldStatus.Value;
+  self.isbn := Books.fldISBN.AsString;
+  self.title := Books.fldTitle.AsString;
+  self.author := Books.fldAuthors.AsString;
+  self.status := Books.fldStatus.AsString;
   self.releseDate := Books.fldReleseDate.Value;
   self.pages := Books.fldPages.Value;
   self.price := Books.fldPrice.Value;
-  self.currency := Books.fldCurrency.Value;
+  self.currency := Books.fldCurrency.AsString;
   self.imported := Books.fldImported.Value;
-  self.description := Books.fldDescription.Value;
+  self.description := Books.fldDescription.AsString;
 end;
 
 
@@ -101,7 +101,7 @@ begin
   // ---------------------------------------------------
   FAllBooks := TBookCollection.Create();
   { TODO 3: Discuss how to remove this dependency. Check implentation uses }
-  BooksDAO := GetBooks_FireDAC(DataModMain.mtabBooks);
+  BooksDAO := GetBooks_FireDAC(DataModMain.dsBooks);
   FAllBooks.LoadDataSet(BooksDAO);
   // ---------------------------------------------------
   FBooksOnShelf := TBookCollection.Create(false);

@@ -383,8 +383,6 @@ object Form1: TForm1
     Padding.Right = 2
     ParentFont = False
     TabOrder = 1
-    ExplicitLeft = 8
-    ExplicitTop = -3
     object lbBooksReaded: TLabel
       AlignWithMargins = True
       Left = 7
