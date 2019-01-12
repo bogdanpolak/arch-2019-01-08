@@ -9,28 +9,25 @@ type
 
   TDataSetHelper = class helper for TDataSet
     function GetMaxValue(const fieldName: string): integer;
-    procedure ForEachRow(MaxRows : Integer; ProcedureToRun : TProc; var Count : Integer);
+    procedure ForEachRow(ProcedureToRun : TProc);
   end;
 
 implementation
 
 { TDataSetHelper }
 
-procedure TDataSetHelper.ForEachRow(MaxRows : Integer; ProcedureToRun : TProc ; var Count : Integer);
+procedure TDataSetHelper.ForEachRow(ProcedureToRun : TProc);
 begin
   if Assigned(Self) and Self.Active then
   begin
     Bookmark := Self.GetBookmark;
     Self.DisableControls;
     try
-      Count := 0;
       Self.First;
-      while not Self.Eof and (Count < MaxRows) do
+      while not Self.Eof do
       begin
         if Assigned(ProcedureToRun) then
            ProcedureToRun;
-
-        Inc(Count);
         Self.Next;
       end;
     finally

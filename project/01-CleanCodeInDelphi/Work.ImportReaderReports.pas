@@ -103,7 +103,6 @@ var
   b: TBook;
   b2: TBook;
   i: Integer;
-  AMessage: TEventMessage;
 begin
   for i := 0 to jsBooks.Count - 1 do
   begin
@@ -259,6 +258,7 @@ begin
   inherited;
   ImportNewBooksFromOpenAPI;
   ImportNewReaderReportsFromOpenAPI;
+  Result := True;
 end;
 
 end.
