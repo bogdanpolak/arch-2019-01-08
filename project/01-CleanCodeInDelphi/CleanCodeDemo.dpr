@@ -4,7 +4,6 @@ uses
   Vcl.Forms,
   Form.Main in 'Form.Main.pas' {Form1},
   Frame.Welcome in 'Frame.Welcome.pas' {FrameWelcome: TFrame},
-  Fake.FDConnection in 'Fake.FDConnection.pas',
   Consts.Application in 'Consts.Application.pas',
   Utils.CipherAES128 in 'Utils.CipherAES128.pas',
   Frame.Import in 'Frame.Import.pas' {FrameImport: TFrame},

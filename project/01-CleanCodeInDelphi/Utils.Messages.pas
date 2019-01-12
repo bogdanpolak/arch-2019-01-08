@@ -27,11 +27,11 @@ type
     procedure SetItem(Index: integer; AMessage: TMyMessage); inline;
   public
     Listeners: Array of TFrame;
-    function Add(msg: TMyMessage): integer; inline;
+    function Add(msg: TMyMessage): integer;
     property Items[Index: integer]: TMyMessage read GetItem
       write SetItem; default;
     procedure RegisterListener(frm: TFrame);
-    procedure ProcessMessages;
+    procedure SendMessages;
   end;
 
 implementation
@@ -49,7 +49,7 @@ begin
   Result := Obj as TMyMessage;
 end;
 
-procedure TMessages.ProcessMessages;
+procedure TMessages.SendMessages;
 var
   i: integer;
   msg: TMyMessage;

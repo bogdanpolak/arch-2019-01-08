@@ -23,7 +23,7 @@ object FrameWelcome: TFrameWelcome
       AlignWithMargins = True
       Left = 4
       Top = 6
-      Width = 166
+      Width = 306
       Height = 40
       Margins.Top = 5
       Align = alTop
@@ -35,16 +35,18 @@ object FrameWelcome: TFrameWelcome
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
+      ExplicitWidth = 166
     end
     object lbAppVersion: TLabel
       AlignWithMargins = True
       Left = 4
       Top = 52
-      Width = 75
+      Width = 306
       Height = 16
       Align = alTop
       Alignment = taCenter
       Caption = 'lbAppVersion'
+      ExplicitWidth = 75
     end
     object Bevel1: TBevel
       AlignWithMargins = True
