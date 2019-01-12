@@ -152,7 +152,7 @@ begin
   DBGrid2.Align := alBottom;
   DBGrid2.Height := frm.Height div 3;
   DBGrid2.DataSource := DataSrc2;
-  DataSrc2.DataSet := DataModMain.mtabReports;
+  DataSrc2.DataSet := DataModMain.dsReports;
   DBGrid2.Margins.Top := 0;
   DBGrid2.AutoResizeAllColumnsWidth();
 end;

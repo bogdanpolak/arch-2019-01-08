@@ -245,7 +245,7 @@ begin
   // Append report into the database:
   // Fields: ReaderId, ISBN, Rating, Oppinion, Reported
   //
-  DataModMain.mtabReports.AppendRecord([readerId, ReaderReport.bookISBN,
+  DataModMain.dsReports.AppendRecord([readerId, ReaderReport.bookISBN,
     ReaderReport.rating, ReaderReport.oppinion, ReaderReport.dtReported]);
 end;
 
