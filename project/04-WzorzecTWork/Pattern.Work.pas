@@ -4,6 +4,7 @@ interface
 
 uses
   System.Classes,
+  System.Generics.Collections,
   VCL.ActnList;
 
 type
@@ -23,9 +24,24 @@ type
     property Action: TAction read GetAction;
   end;
 
+type
+  TActionWork = class (TAction)
+  private
+    FWork:  TObjectList<TWork>;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    procedure RegisterWork (aWork: TWork);
+  end;
+
+
+
 implementation
 
-{ TWork }
+// -------------------------------------------------------------------
+// -------------------------------------------------------------------
+// TWork
+// -------------------------------------------------------------------
 
 constructor TWork.Create(AOwner: TComponent);
 begin
@@ -60,6 +76,28 @@ end;
 procedure TWork.SetActionEnable(Enable: boolean);
 begin
   FAction.Enabled := Enable;
+end;
+
+// -------------------------------------------------------------------
+// -------------------------------------------------------------------
+// TActionWork
+// -------------------------------------------------------------------
+
+constructor TActionWork.Create(AOwner: TComponent);
+begin
+  inherited;
+  FWork := TObjectList<TWork>.Create;
+end;
+
+destructor TActionWork.Destroy;
+begin
+  FWork.Free;
+  inherited;
+end;
+
+procedure TActionWork.RegisterWork(aWork: TWork);
+begin
+  FWork.Add(aWork);
 end;
 
 end.
