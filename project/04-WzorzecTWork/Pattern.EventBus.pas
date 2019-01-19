@@ -1,4 +1,4 @@
-unit Messaging.EventBus;
+unit Pattern.EventBus;
 
 interface
 
@@ -24,15 +24,16 @@ type
   TEventBus = class(TComponent)
   strict private
     Subscribers: TArray<TRegistrationInfo>;
-    function LocateMethod(MessageID: Integer; AMethod: TSubscriberEvent)
-      : Integer;
+    function LocateMethod(MessageID: Integer;
+      AMethod: TSubscriberEvent): Integer;
     class var GlobalEvenBus: TEventBus;
+  public
     class constructor Create;
     class destructor Destroy;
-  public
     class procedure _Register(MessageID: Integer; AMethod: TSubscriberEvent);
     class procedure _Unregister(MessageID: Integer; AMethod: TSubscriberEvent);
     class procedure _Post(MessageID: Integer; const AMessage: TEventMessage);
+    class procedure _PostString(MessageID: Integer; const MessageText: String);
     class procedure _Ping(MessageID: Integer);
     procedure RegisterMethod(MessageID: Integer; AMethod: TSubscriberEvent);
     procedure UnregisterMethod(MessageID: Integer; AMethod: TSubscriberEvent);
@@ -115,19 +116,28 @@ end;
 class procedure TEventBus._Register(MessageID: Integer;
   AMethod: TSubscriberEvent);
 begin
-  GlobalEvenBus.RegisterMethod(MessageID,AMethod);
+  GlobalEvenBus.RegisterMethod(MessageID, AMethod);
 end;
 
 class procedure TEventBus._Unregister(MessageID: Integer;
   AMethod: TSubscriberEvent);
 begin
-  GlobalEvenBus.UnregisterMethod(MessageID,AMethod);
+  GlobalEvenBus.UnregisterMethod(MessageID, AMethod);
 end;
 
 class procedure TEventBus._Post(MessageID: Integer;
   const AMessage: TEventMessage);
 begin
-  GlobalEvenBus.PostMessage(MessageID,AMessage);
+  GlobalEvenBus.PostMessage(MessageID, AMessage);
+end;
+
+class procedure TEventBus._PostString(MessageID: Integer;
+  const MessageText: String);
+var
+  AMessage: TEventMessage;
+begin
+  AMessage.TagString := MessageText;
+  GlobalEvenBus.PostMessage(MessageID, AMessage);
 end;
 
 class procedure TEventBus._Ping(MessageID: Integer);

@@ -3,11 +3,11 @@ program WzorzecTWork;
 uses
   Vcl.Forms,
   Form.Main in 'Form.Main.pas' {Form1},
-  MVC.Work in 'MVC.Work.pas',
   Work.CommandOne in 'Work.CommandOne.pas',
   Work.Messaging in 'Work.Messaging.pas',
   Module.MessagingWork in 'Module.MessagingWork.pas' {ModuleOrders: TDataModule},
-  Messaging.EventBus in 'Messaging.EventBus.pas';
+  Pattern.Work in 'Pattern.Work.pas',
+  Pattern.EventBus in 'Pattern.EventBus.pas';
 
 {$R *.res}
 

@@ -6,11 +6,10 @@ uses
   System.Classes,
   System.SysUtils,
   Vcl.ExtCtrls,
-  MVC.Work,
-  Module.MessagingWork;
+  Pattern.Work;
 
 type
-  TNotShippedOrders = record
+  TOrders = record
     FOrdes: array of String;
     function ToString: String;
   end;
@@ -18,32 +17,46 @@ type
 type
   TMessagingWork = class(TWork)
   private
-    FWorkerTimer: TTimer;
-    Data: TNotShippedOrders;
-    FOrdersModule: TModuleOrders;
+    FForEachOrderDelay: word;
     FInProgress: boolean;
-    procedure WorkerTimerEvent(Sender: TObject);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     function DoWork: boolean; override;
+    property InProgress: boolean read FInProgress;
   end;
 
 implementation
 
 uses
-  Messaging.EventBus;
+  System.Threading,
+  Pattern.EventBus,
+  Module.MessagingWork;
+
+{ TOrders }
+
+function TOrders.ToString: String;
+var
+  S: String;
+begin
+  Result := '';
+  for S in FOrdes do
+  begin
+    if Result = '' then
+      Result := S
+    else
+      Result := Result + ', ' + S;
+  end;
+
+end;
 
 { TMessagingWork }
 
 constructor TMessagingWork.Create(AOwner: TComponent);
 begin
   inherited;
-  FOrdersModule := TModuleOrders.Create(Self);
-  FWorkerTimer := TTimer.Create(Self);
-  FWorkerTimer.Enabled := False;
-  FWorkerTimer.Interval := 20;
-  FWorkerTimer.OnTimer := WorkerTimerEvent;
+  FInProgress := False;
+  FForEachOrderDelay := 60;
   Caption := '[Work2] Start getting data';
 end;
 
@@ -53,58 +66,58 @@ begin
 
 end;
 
+function ISODateStringToDate(const DateStr: String): TDateTime;
+var
+  AFormatSettings: TFormatSettings;
+begin
+  AFormatSettings := TFormatSettings.Create;
+  AFormatSettings.DateSeparator := '-';
+  AFormatSettings.ShortDateFormat := 'yyyy.mm.dd';
+  Result := StrToDate(DateStr, AFormatSettings);
+end;
+
 function TMessagingWork.DoWork: boolean;
 var
   isBusy: boolean;
+  dtDay: TDateTime;
 begin
-  isBusy := FWorkerTimer.Enabled;
-  if isBusy then
-    Caption := 'Just working ... I''m busy now!'
-  else
-  begin
-    FOrdersModule.qOrders.First;
-    SetLength(Data.FOrdes, 0);
-    FWorkerTimer.Tag := 0;
-    FWorkerTimer.Enabled := True;
-  end;
+  Action.Enabled := False;
+  FInProgress := True;
+  dtDay := ISODateStringToDate('1998-06-01');
+  TEventBus._PostString(1, ' ... ');
+  TTask.Run(
+    procedure()
+    var
+      OrdersModule: TModuleOrders;
+      StrOrderId: string;
+      NotShippedOrders: TOrders;
+    begin
+      OrdersModule := TModuleOrders.Create(Self);
+      OrdersModule.fdqOrders.ParamByName('ADAY').AsDate := dtDay;
+      OrdersModule.fdqOrders.Open();
+      while not OrdersModule.fdqOrders.Eof do
+      begin
+        StrOrderId := OrdersModule.fdqOrders.FieldByName('OrderID').AsString;
+        System.Classes.TThread.Synchronize(nil,
+          procedure()
+          begin
+            Caption := 'Order: ' + StrOrderId;
+          end);
+        NotShippedOrders.FOrdes := NotShippedOrders.FOrdes + [StrOrderId];
+        OrdersModule.fdqOrders.Next;
+        sleep (FForEachOrderDelay);
+      end;
+      OrdersModule.Free;
+      System.Classes.TThread.Synchronize(nil,
+        procedure()
+        begin
+          Caption := 'Done';
+          TEventBus._PostString(1, NotShippedOrders.ToString);
+          Action.Enabled := True;
+        end);
+    end);
+  FInProgress := False;
   Result := True;
-end;
-
-{ TNotShippedOrders }
-
-function TNotShippedOrders.ToString: String;
-var
-  S: String;
-begin
-  Result := '';
-  for S in FOrdes do
-  begin
-    Result := Result + ', ' + S;
-  end;
-end;
-
-
-procedure TMessagingWork.WorkerTimerEvent(Sender: TObject);
-var
-  isFoundNotShipped: boolean;
-  StrOrderId: string;
-  AMessage: TEventMessage;
-begin
-  isFoundNotShipped := FOrdersModule.LocateNearestNotShippedOrder();
-  if isFoundNotShipped then
-  begin
-    StrOrderId := FOrdersModule.qOrdersOrderID.Value.ToString;
-    Caption := 'Order: ' + StrOrderId;
-    Data.FOrdes := Data.FOrdes + [StrOrderId];
-    FOrdersModule.qOrders.Next;
-  end
-  else
-  begin
-    FWorkerTimer.Enabled := False;
-    Caption := 'Done';
-    AMessage.TagString := Data.ToString;
-    TEventBus._Post(1,AMessage);
-  end;
 end;
 
 end.

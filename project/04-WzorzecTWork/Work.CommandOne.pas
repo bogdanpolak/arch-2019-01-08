@@ -4,7 +4,7 @@ interface
 
 uses
   System.Classes,
-  MVC.Work,
+  Pattern.Work,
   Vcl.ExtCtrls;
 
 type
